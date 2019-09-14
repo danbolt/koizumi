@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <!-- libraries -->
+        <script src="lib/three.min.js"></script>
+        <script src="lib/GLTFLoader.js"></script>
+        <script src="lib/phaser.min.js"></script>
+
+        <!-- game source code -->
+        <script src="src/player.js"></script>
+        <script src="src/scene/gameplay.js"></script>
+        <script src="src/main.js"></script>
+
+        <style>
+            body {
+                margin: 0px 0px 0px 0px;
+                padding: 0px 0px 0px 0px;
+            }
+
+            canvas {
+                margin: 0px 0px 0px 0px;
+                padding: 0px 0px 0px 0px;
+
+                image-rendering: pixelated;
+                image-rendering: -moz-crisp-edges;
+            }
+        </style>
+    </head>
+    <body>
+        <script>
+            main();
+        </script>
+    </body>
+</html>
