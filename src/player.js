@@ -8,6 +8,8 @@ let Player = function (scene, x, y) {
   this.currentState = PlayerStates.NORMAL;
   this.keys = {};
 
+  this.dashEvent = null;
+
   this.inputData = {
     directonVector: new Phaser.Math.Vector2(0, 0),
     currentAngle: 0,
@@ -73,9 +75,12 @@ Player.prototype.update = function () {
     this.currentState = PlayerStates.DASHING;
     this.currentMoveSpeed = GameplayConstants.DashSpeed;
 
-    this.scene.time.delayedCall(GameplayConstants.DashDuration, () => {
+    this.tint = 0x0000ff;
+    this.dashEvent = this.scene.time.delayedCall(GameplayConstants.DashDuration, () => {
       this.currentMoveSpeed = GameplayConstants.MoveSpeed;
       this.currentState = PlayerStates.NORMAL;
+      this.dashEvent = null;
+      this.tint = 0xffffff;
     }, [], this);
   }
 
