@@ -11,14 +11,12 @@ let Gameplay = function (config) {
     this.camera = new THREE.PerspectiveCamera( 70, GAME_WIDTH / GAME_HEIGHT, 1, 1000 );
     this.renderer = null;
     this.threeScene = new THREE.Scene();
+    this.sceneMeshData = {};
 
 };
 Gameplay.prototype.init = function () {
     this.renderer = new THREE.WebGLRenderer( { canvas: this.game.canvas, context: this.game.context, antialias: false } );
-
-
     this.events.on('shutdown', this.shutdown, this);
-
 };
 Gameplay.prototype.preload = function () {
     this.load.spritesheet('test_sheet', 'asset/image/fromJesse.png', { frameWidth: 32, frameHeight: 32 });
@@ -44,17 +42,19 @@ Gameplay.prototype.initializeThreeScene = function () {
     this.camera.position.set(0, 0, 400);
 
     let geometry = new THREE.BoxBufferGeometry( 200, 200, 200 );
-    let material = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
+    let material = new THREE.MeshBasicMaterial( { color: 0x440000 } );
 
     let mesh = new THREE.Mesh( geometry, material );
-    mesh.rotation.set(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, 0);
     this.threeScene.add( mesh );
+
+    this.sceneMeshData.testMesh = mesh;
 };
 Gameplay.prototype.updateThreeScene = function () {
     //
 };
 Gameplay.prototype.setupEvents = function () {
     this.events.addListener('update', this.player.update, this.player);
+
 };
 Gameplay.prototype.removeEvents = function () {
     this.events.removeListener('update', this.player.update, this.player);
@@ -63,7 +63,7 @@ Gameplay.prototype.create = function () {
     this.setupThreeBackground();
     this.initializeThreeScene();
 
-    this.player = new Player(this, 128, 64);
+    this.player = new Player(this, 128, 128);
 
     this.map = this.add.tilemap('test_map');
     this.map.addTilesetImage('tilesheet', 'test_sheet_image');
@@ -83,6 +83,7 @@ Gameplay.prototype.create = function () {
     this.physics.add.collider(this.player, this.foreground);
 };
 Gameplay.prototype.update = function () {
+    this.sceneMeshData.testMesh.rotation.set((this.player.x / GAME_WIDTH) * Math.PI * 2, (this.player.y / GAME_WIDTH) * Math.PI * 2, 0);
 };
 Gameplay.prototype.shutdown = function () {
     this.player = null;
@@ -93,4 +94,5 @@ Gameplay.prototype.shutdown = function () {
         this.threeScene.remove(this.threeScene.children[0]); 
     }
     this.three = null;
+    this.sceneMeshData = {};
 };

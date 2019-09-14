@@ -7,6 +7,9 @@ let main = function() {
                         antialias: false,
                         scaleMode: Phaser.Scale.ScaleModes.FIT,
                         autoCenter: Phaser.Scale.Center.CENTER_BOTH,
+                        input: {
+                            gamepad: true
+                        },
                         physics: {
                             default: 'arcade',
                             arcade: {
