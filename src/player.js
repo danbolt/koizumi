@@ -3,7 +3,6 @@
 let Player = function (scene, x, y) {
   Phaser.GameObjects.Sprite.call(this, scene, x, y, 'test_sheet', 0);
 
-
   scene.add.existing(this);
   scene.physics.add.existing(this);
   scene.events.addListener('update', this.update, this);

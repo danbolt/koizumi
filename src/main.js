@@ -1,7 +1,7 @@
 let main = function() {
     let game = new Phaser.Game({
-                        width: 320,
-                        height: 240,
+                        width: GAME_WIDTH,
+                        height: GAME_HEIGHT,
                         type : Phaser.WEBGL,
                         pixelArt: true,
                         antialias: false,
