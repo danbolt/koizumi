@@ -13,7 +13,8 @@ let Player = function (scene, x, y) {
   this.inputData = {
     directonVector: new Phaser.Math.Vector2(0, 0),
     currentAngle: 0,
-    aButtonDown: false
+    aButtonDown: false,
+    bButtonDown: false
   };
   this.initKeysInput();
 }
@@ -28,11 +29,13 @@ Player.prototype.initKeysInput = function () {
   this.keys.downArrow = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN);
   this.keys.upArrow = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP);
 
-  this.keys.aKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+  this.keys.aKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
+  this.keys.bKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.C);
 };
 Player.prototype.updateInputData = function () {
   this.inputData.directonVector.set(0, 0);
   this.inputData.aButtonDown = false;
+  this.inputData.bButtonDown = false;
 
   // Keyboard update
   if (this.keys.rightArrow.isDown) {
@@ -51,6 +54,7 @@ Player.prototype.updateInputData = function () {
   }
 
   this.inputData.aButtonDown = (this.keys.aKey.isDown || this.inputData.aButtonDown);
+  this.inputData.aButtonDown = (this.keys.bKey.isDown || this.inputData.bButtonDown);
 
   // Gamepad update
   if (this.scene.input.gamepad && (this.scene.input.gamepad.total > 0)) {
@@ -61,6 +65,7 @@ Player.prototype.updateInputData = function () {
     }
 
     this.inputData.aButtonDown = (pad.A || this.inputData.aButtonDown);
+    this.inputData.bButtonDown = (pad.B || this.inputData.bButtonDown);
   }
 
   // TODO: normalize this to camera direction later
@@ -68,31 +73,85 @@ Player.prototype.updateInputData = function () {
     this.inputData.directonVector.normalize();
   }
 };
+Player.prototype.initiateStrike = function () {
+  this.currentState = PlayerStates.STRIKING;
+  this.tint = 0x777700;
+  console.log('windup...');
+  let windUp = this.scene.time.delayedCall(GameplayConstants.StrikeWindup, () => {
+    console.log('strike!');
+    this.tint = 0xFFFF00;
+    let strike = this.scene.time.delayedCall(GameplayConstants.StrikeTime, () => {
+      console.log('cooldown');
+      this.tint = 0x444400;
+      let cooldown = this.scene.time.delayedCall(GameplayConstants.StrikeCooldown, () => {
+        console.log('done.');
+        this.tint = 0xffffff;
+        this.currentState = PlayerStates.NORMAL;
+      }, [], this);
+    }, [], this);
+  }, [], this);
+};
+Player.prototype.initiateDash = function () {
+  this.currentState = PlayerStates.DASHING;
+  this.currentMoveSpeed = GameplayConstants.DashSpeed;
+
+  this.tint = 0x0000ff;
+  this.dashEvent = this.scene.time.delayedCall(GameplayConstants.DashDuration, () => {
+    this.currentMoveSpeed = GameplayConstants.MoveSpeed;
+    this.currentState = PlayerStates.NORMAL;
+    this.dashEvent = null;
+    this.tint = 0xffffff;
+  }, [], this);
+};
 Player.prototype.update = function () {
   this.updateInputData();
 
+  // NORMAL -> DASHING
   if ((this.currentState === PlayerStates.NORMAL) && this.inputData.aButtonDown) {
-    this.currentState = PlayerStates.DASHING;
-    this.currentMoveSpeed = GameplayConstants.DashSpeed;
-
-    this.tint = 0x0000ff;
-    this.dashEvent = this.scene.time.delayedCall(GameplayConstants.DashDuration, () => {
-      this.currentMoveSpeed = GameplayConstants.MoveSpeed;
-      this.currentState = PlayerStates.NORMAL;
-      this.dashEvent = null;
-      this.tint = 0xffffff;
-    }, [], this);
+    this.initiateDash();
   }
 
+  // NORMAL -> STRIKING
+  if ((this.currentState === PlayerStates.NORMAL) && this.inputData.bButtonDown) {
+    this.initiateStrike();
+  }
+
+  // NORMAL update
   if (this.currentState === PlayerStates.NORMAL) {
     if (this.inputData.directonVector.lengthSq() > 0.001) {
       this.inputData.currentAngle = this.inputData.directonVector.angle();
     }
     this.body.velocity.x = this.inputData.directonVector.x * this.currentMoveSpeed;
     this.body.velocity.y = this.inputData.directonVector.y * this.currentMoveSpeed;
-  } else if (this.currentState === PlayerStates.DASHING) {
+  }
+
+  // DASHING update
+  if (this.currentState === PlayerStates.DASHING) {
     this.body.velocity.x = Math.cos(this.inputData.currentAngle) * this.currentMoveSpeed;
     this.body.velocity.y = Math.sin(this.inputData.currentAngle) * this.currentMoveSpeed;
+
+    if (this.dashEvent) {
+      // Early exit logic
+      if ((this.dashEvent.elapsed > (GameplayConstants.DashDuration - GameplayConstants.DashToStrikeEarlyWindow)) && this.inputData.bButtonDown) {
+        console.log('early exit');
+
+        this.dashEvent.remove();
+        this.dashEvent = null;
+        this.currentMoveSpeed = GameplayConstants.MoveSpeed;
+
+        if (this.inputData.directonVector.lengthSq() > 0.001) {
+          this.inputData.currentAngle = this.inputData.directonVector.angle();
+        }
+
+        this.initiateStrike();
+      }
+    }
+  }
+
+  // STRIKING update
+  if (this.currentState === PlayerStates.STRIKING) {
+    this.body.velocity.x = 0;
+    this.body.velocity.y = 0;
   }
 
   this.rotation = this.inputData.currentAngle + (Math.PI * 0.5);

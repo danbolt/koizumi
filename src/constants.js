@@ -4,7 +4,12 @@ const GAME_HEIGHT = 240;
 const GameplayConstants = {
   MoveSpeed: 70,
   DashSpeed: 400,
-  DashDuration: 111,
+  DashDuration: 120,
+  DashToStrikeEarlyWindow: 60,
+
+  StrikeWindup: 80,
+  StrikeTime: 108,
+  StrikeCooldown: 36
 };
 
 const PlayerStates = {
