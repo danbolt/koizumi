@@ -53,8 +53,13 @@ Gameplay.prototype.initializeThreeScene = function () {
 Gameplay.prototype.updateThreeScene = function () {
     //
 };
+Gameplay.prototype.setupEvents = function () {
+    this.events.addListener('update', this.player.update, this.player);
+};
+Gameplay.prototype.removeEvents = function () {
+    this.events.removeListener('update', this.player.update, this.player);
+};
 Gameplay.prototype.create = function () {
-    console.log('create');
     this.setupThreeBackground();
     this.initializeThreeScene();
 
@@ -65,13 +70,14 @@ Gameplay.prototype.create = function () {
     this.foreground = this.map.createStaticLayer('foreground', 'tilesheet');
     this.foreground.setCollision([14]);
 
-    let spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+    this.setupEvents();
+
+    // TODO: restart the scene on appropriate player death
+    let spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
     spaceKey.on('down', (ev) => {
         spaceKey.removeAllListeners();
-        this.events.removeListener('update', this.player.update, this.player);
+        this.removeEvents();
         this.scene.restart();
-        //this.game.scene.stop('Gameplay');
-        //
     });
 
     this.physics.add.collider(this.player, this.foreground);

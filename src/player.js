@@ -5,7 +5,6 @@ let Player = function (scene, x, y) {
 
   scene.add.existing(this);
   scene.physics.add.existing(this);
-  scene.events.addListener('update', this.update, this);
 
   this.kMoveSpeed = 60;
   this.keys = {};
