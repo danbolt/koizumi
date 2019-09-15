@@ -1,4 +1,17 @@
-let Player = function (scene, x, y) {
+
+let Strike = function (scene) {
+  Phaser.GameObjects.Sprite.call(this, scene, -99999, -99999, 'test_sheet', 17);
+
+  scene.add.existing(this);
+  scene.physics.add.existing(this);
+
+  this.setScale(0.5, 0.5);
+}
+Strike.prototype = Object.create(Phaser.GameObjects.Sprite.prototype);
+Strike.prototype.constructor = Strike;
+
+
+let Player = function (scene, x, y, strike, agitationPerStrike, agitationCooldownPerFrame) {
   Phaser.GameObjects.Sprite.call(this, scene, x, y, 'test_sheet', 0);
 
   scene.add.existing(this);
@@ -7,6 +20,12 @@ let Player = function (scene, x, y) {
   this.currentMoveSpeed = GameplayConstants.MoveSpeed;
   this.currentState = PlayerStates.NORMAL;
   this.keys = {};
+
+  this.strike = strike;
+
+  this.agitation = 0;
+  this.agitationPerStrike = agitationPerStrike;
+  this.agitationCooldownPerFrame = agitationCooldownPerFrame;
 
   this.dashEvent = null;
 
@@ -54,7 +73,7 @@ Player.prototype.updateInputData = function () {
   }
 
   this.inputData.aButtonDown = (this.keys.aKey.isDown || this.inputData.aButtonDown);
-  this.inputData.aButtonDown = (this.keys.bKey.isDown || this.inputData.bButtonDown);
+  this.inputData.bButtonDown = (this.keys.bKey.isDown || this.inputData.bButtonDown);
 
   // Gamepad update
   if (this.scene.input.gamepad && (this.scene.input.gamepad.total > 0)) {
@@ -75,16 +94,22 @@ Player.prototype.updateInputData = function () {
 };
 Player.prototype.initiateStrike = function () {
   this.currentState = PlayerStates.STRIKING;
+  this.agitation += this.agitationPerStrike;
   this.tint = 0x777700;
-  console.log('windup...');
+  //console.log('windup...');
   let windUp = this.scene.time.delayedCall(GameplayConstants.StrikeWindup, () => {
-    console.log('strike!');
+    const dx = GameplayConstants.StrikeDistance * Math.cos(this.inputData.currentAngle);
+    const dy = GameplayConstants.StrikeDistance * Math.sin(this.inputData.currentAngle);
+    this.strike.setPosition(this.x + dx, this.y + dy);
+
+    //console.log('strike!');
     this.tint = 0xFFFF00;
     let strike = this.scene.time.delayedCall(GameplayConstants.StrikeTime, () => {
-      console.log('cooldown');
+      this.strike.setPosition(-999999);
+      //console.log('cooldown');
       this.tint = 0x444400;
       let cooldown = this.scene.time.delayedCall(GameplayConstants.StrikeCooldown, () => {
-        console.log('done.');
+        //console.log('done.');
         this.tint = 0xffffff;
         this.currentState = PlayerStates.NORMAL;
       }, [], this);
@@ -155,4 +180,10 @@ Player.prototype.update = function () {
   }
 
   this.rotation = this.inputData.currentAngle + (Math.PI * 0.5);
+
+  // Agitation
+  this.agitation = Math.max(this.agitation - this.agitationCooldownPerFrame, 0);
+  if (this.agitation > GameplayConstants.AgitationMax) {
+    console.log('death');
+  }
 };

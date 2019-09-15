@@ -3,7 +3,9 @@
 let Gameplay = function (config) {
     Phaser.Scene.call(this, config);
 
+    this.agitationBar = null;
     this.player = null;
+    this.strike = null;
     this.map = null;
     this.foreground = null;
 
@@ -50,7 +52,7 @@ Gameplay.prototype.initializeThreeScene = function () {
     this.sceneMeshData.testMesh = mesh;
 };
 Gameplay.prototype.updateThreeScene = function () {
-    //
+    this.sceneMeshData.testMesh.rotation.set((this.player.x / GAME_WIDTH) * Math.PI * 2, (this.player.y / GAME_WIDTH) * Math.PI * 2, 0);
 };
 Gameplay.prototype.setupEvents = function () {
     this.events.addListener('update', this.player.update, this.player);
@@ -63,7 +65,9 @@ Gameplay.prototype.create = function () {
     this.setupThreeBackground();
     this.initializeThreeScene();
 
-    this.player = new Player(this, 128, 128);
+    this.agitationBar = this.add.rectangle(GAME_WIDTH * 0.5, 0, 1, 16, 0x333333);
+    this.strike = new Strike(this, 0, 0);
+    this.player = new Player(this, 128, 128, this.strike, 13, 0.082);
 
     this.map = this.add.tilemap('test_map');
     this.map.addTilesetImage('tilesheet', 'test_sheet_image');
@@ -83,10 +87,16 @@ Gameplay.prototype.create = function () {
     this.physics.add.collider(this.player, this.foreground);
 };
 Gameplay.prototype.update = function () {
-    this.sceneMeshData.testMesh.rotation.set((this.player.x / GAME_WIDTH) * Math.PI * 2, (this.player.y / GAME_WIDTH) * Math.PI * 2, 0);
+    const agitationRatio = (this.player.agitation / GameplayConstants.AgitationMax);
+    this.agitationBar.scaleX = agitationRatio * GAME_WIDTH;
+    this.agitationBar.fillColor = Phaser.Display.Color.GetColor(~~((0.5 + 0.5 * agitationRatio) * 255), ~~(0.5 * 255), ~~(0.5 * 255));
+
+    this.updateThreeScene();
 };
 Gameplay.prototype.shutdown = function () {
     this.player = null;
+    this.strike = null;
+    this.agitationBar = null;
     this.map = null;
     this.foreground = null;
 

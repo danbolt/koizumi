@@ -9,7 +9,10 @@ const GameplayConstants = {
 
   StrikeWindup: 80,
   StrikeTime: 108,
-  StrikeCooldown: 36
+  StrikeCooldown: 36,
+  StrikeDistance: 24,
+
+  AgitationMax: 100
 };
 
 const PlayerStates = {
