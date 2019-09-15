@@ -11,8 +11,62 @@
          "width":12,
          "x":0,
          "y":0
+        }, 
+        {
+         "draworder":"topdown",
+         "name":"enemies",
+         "objects":[
+                {
+                 "height":32,
+                 "id":1,
+                 "name":"one",
+                 "rotation":0,
+                 "type":"test_monster",
+                 "visible":true,
+                 "width":32,
+                 "x":224,
+                 "y":192
+                }, 
+                {
+                 "height":32,
+                 "id":2,
+                 "name":"one",
+                 "rotation":0,
+                 "type":"test_monster",
+                 "visible":true,
+                 "width":32,
+                 "x":160,
+                 "y":128
+                }, 
+                {
+                 "height":32,
+                 "id":3,
+                 "name":"one",
+                 "rotation":0,
+                 "type":"test_monster",
+                 "visible":true,
+                 "width":32,
+                 "x":288,
+                 "y":128
+                }, 
+                {
+                 "height":32,
+                 "id":4,
+                 "name":"one",
+                 "rotation":0,
+                 "type":"test_monster",
+                 "visible":true,
+                 "width":32,
+                 "x":288,
+                 "y":64
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
         }],
- "nextobjectid":1,
+ "nextobjectid":5,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.1.6",
@@ -21,7 +75,7 @@
         {
          "columns":8,
          "firstgid":1,
-         "image":"..\/image\/fromJesse.png",
+         "image":"..\/..\/..\/p3-three\/asset\/image\/fromJesse.png",
          "imageheight":256,
          "imagewidth":256,
          "margin":0,

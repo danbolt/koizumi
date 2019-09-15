@@ -17,6 +17,8 @@ let Player = function (scene, x, y, strike, agitationPerStrike, agitationCooldow
   scene.add.existing(this);
   scene.physics.add.existing(this);
 
+  this.body.setSize(15, 15, true);
+
   this.currentMoveSpeed = GameplayConstants.MoveSpeed;
   this.currentState = PlayerStates.NORMAL;
   this.keys = {};

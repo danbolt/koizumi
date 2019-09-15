@@ -9,6 +9,8 @@ let Gameplay = function (config) {
     this.map = null;
     this.foreground = null;
 
+    this.monsters = [];
+
     this.three = null;
     this.camera = new THREE.PerspectiveCamera( 70, GAME_WIDTH / GAME_HEIGHT, 1, 1000 );
     this.renderer = null;
@@ -57,17 +59,22 @@ Gameplay.prototype.updateThreeScene = function () {
 Gameplay.prototype.setupEvents = function () {
     this.events.addListener('update', this.player.update, this.player);
 
+    this.monsters.forEach(function(monster) {
+        this.events.addListener('update', monster.update, monster);
+    }, this);
+
 };
 Gameplay.prototype.removeEvents = function () {
     this.events.removeListener('update', this.player.update, this.player);
+
+    this.monsters.forEach(function(monster) {
+        this.events.removeListener('update', monster.update, monster);
+    }, this);
 };
 Gameplay.prototype.create = function () {
     this.setupThreeBackground();
     this.initializeThreeScene();
 
-    this.agitationBar = this.add.rectangle(GAME_WIDTH * 0.5, 0, 1, 16, 0x333333);
-    this.agitationBar.scrollFactorX = 0;
-    this.agitationBar.scrollFactorY = 0;
     this.strike = new Strike(this, 0, 0);
     this.player = new Player(this, 128, 128, this.strike, 13, 0.082);
 
@@ -75,8 +82,6 @@ Gameplay.prototype.create = function () {
     this.map.addTilesetImage('tilesheet', 'test_sheet_image');
     this.foreground = this.map.createStaticLayer('foreground', 'tilesheet');
     this.foreground.setCollision([14]);
-
-    this.setupEvents();
 
     // TODO: restart the scene on appropriate player death
     let spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
@@ -86,17 +91,33 @@ Gameplay.prototype.create = function () {
         this.scene.restart();
     });
 
-    let m = new Monster(this, 85, 100);
+    this.monsters = [];
+
+    const monsterLayer = this.map.getObjectLayer('enemies');
+    this.monsters = monsterLayer.objects.map((monsterData) => {
+        if (monsterData.type === 'test_monster') {
+            return new Monster(this, monsterData.x, monsterData.y, this.player);
+        }
+
+        return null;
+    }).filter((newMonster) => { return newMonster !== null});
 
     this.physics.add.collider(this.player, this.foreground);
-    this.physics.add.overlap(this.player, m, function (player, monster) {
-        const arbitaryPick = 10;
+    this.physics.add.overlap(this.player, this.monsters, function (player, monster) {
+        const arbitaryPick = 1;
         player.agitation += arbitaryPick;
     }, function (player, monster) {
         return (player.currentState !== PlayerStates.DASHING);
     });
 
     this.cameras.cameras[0].startFollow(this.player, true, 0.1, 0.1);
+
+    // UI setup
+    this.agitationBar = this.add.rectangle(GAME_WIDTH * 0.5, 0, 1, 16, 0x333333);
+    this.agitationBar.scrollFactorX = 0;
+    this.agitationBar.scrollFactorY = 0;
+
+    this.setupEvents();
 };
 Gameplay.prototype.update = function () {
     const agitationRatio = (this.player.agitation / GameplayConstants.AgitationMax);
@@ -104,7 +125,7 @@ Gameplay.prototype.update = function () {
     this.agitationBar.fillColor = Phaser.Display.Color.GetColor(~~((0.5 + 0.5 * agitationRatio) * 255), ~~(0.5 * 255), ~~(0.5 * 255));
 
     // TODO: remove this
-    this.cameras.cameras[0].setAngle(this.player.inputData.cameraAngle.x);
+    //this.cameras.cameras[0].setAngle(this.player.inputData.cameraAngle.x);
 
     this.updateThreeScene();
 };
@@ -114,6 +135,8 @@ Gameplay.prototype.shutdown = function () {
     this.agitationBar = null;
     this.map = null;
     this.foreground = null;
+
+    this.monsters = [];
 
     while(this.threeScene.children.length > 0){ 
         this.threeScene.remove(this.threeScene.children[0]); 
