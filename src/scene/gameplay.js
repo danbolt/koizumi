@@ -93,6 +93,8 @@ Gameplay.prototype.create = function () {
     }, function (player, monster) {
         return (player.currentState !== PlayerStates.DASHING);
     });
+
+    this.cameras.cameras[0].startFollow(this.player, true, 0.1, 0.1);
 };
 Gameplay.prototype.update = function () {
     const agitationRatio = (this.player.agitation / GameplayConstants.AgitationMax);

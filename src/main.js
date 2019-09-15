@@ -7,6 +7,7 @@ let main = function() {
                         antialias: false,
                         scaleMode: Phaser.Scale.ScaleModes.FIT,
                         autoCenter: Phaser.Scale.Center.CENTER_BOTH,
+                        roundPixels: true,
                         input: {
                             gamepad: true
                         },
