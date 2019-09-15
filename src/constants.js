@@ -12,7 +12,9 @@ const GameplayConstants = {
   StrikeCooldown: 36,
   StrikeDistance: 24,
 
-  AgitationMax: 100
+  AgitationMax: 100,
+
+  CameraTurnSpeed: 1.87
 };
 
 const PlayerStates = {

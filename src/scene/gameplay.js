@@ -66,6 +66,8 @@ Gameplay.prototype.create = function () {
     this.initializeThreeScene();
 
     this.agitationBar = this.add.rectangle(GAME_WIDTH * 0.5, 0, 1, 16, 0x333333);
+    this.agitationBar.scrollFactorX = 0;
+    this.agitationBar.scrollFactorY = 0;
     this.strike = new Strike(this, 0, 0);
     this.player = new Player(this, 128, 128, this.strike, 13, 0.082);
 
@@ -100,6 +102,9 @@ Gameplay.prototype.update = function () {
     const agitationRatio = (this.player.agitation / GameplayConstants.AgitationMax);
     this.agitationBar.scaleX = agitationRatio * GAME_WIDTH;
     this.agitationBar.fillColor = Phaser.Display.Color.GetColor(~~((0.5 + 0.5 * agitationRatio) * 255), ~~(0.5 * 255), ~~(0.5 * 255));
+
+    // TODO: remove this
+    this.cameras.cameras[0].setAngle(this.player.inputData.cameraAngle.x);
 
     this.updateThreeScene();
 };

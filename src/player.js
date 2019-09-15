@@ -33,7 +33,11 @@ let Player = function (scene, x, y, strike, agitationPerStrike, agitationCooldow
     directonVector: new Phaser.Math.Vector2(0, 0),
     currentAngle: 0,
     aButtonDown: false,
-    bButtonDown: false
+    bButtonDown: false,
+    lButtonDown: false,
+    rButtonDown: false,
+    cameraAngle: new Phaser.Math.Vector2(0, 0),
+    computeMat: new Phaser.Math.Matrix3()
   };
   this.initKeysInput();
 }
@@ -43,18 +47,23 @@ Player.prototype.constructor = Player;
 
 Player.prototype.initKeysInput = function () {
   // attach keys
-  this.keys.rightArrow = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT);
-  this.keys.leftArrow = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT);
-  this.keys.downArrow = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN);
-  this.keys.upArrow = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP);
+  this.keys.rightArrow = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
+  this.keys.leftArrow = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
+  this.keys.downArrow = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
+  this.keys.upArrow = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
 
   this.keys.aKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
   this.keys.bKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.C);
+
+  this.keys.rKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q);
+  this.keys.lKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
 };
 Player.prototype.updateInputData = function () {
   this.inputData.directonVector.set(0, 0);
   this.inputData.aButtonDown = false;
   this.inputData.bButtonDown = false;
+  this.inputData.lButtonDown = false;
+  this.inputData.rButtonDown = false;
 
   // Keyboard update
   if (this.keys.rightArrow.isDown) {
@@ -74,6 +83,8 @@ Player.prototype.updateInputData = function () {
 
   this.inputData.aButtonDown = (this.keys.aKey.isDown || this.inputData.aButtonDown);
   this.inputData.bButtonDown = (this.keys.bKey.isDown || this.inputData.bButtonDown);
+  this.inputData.lButtonDown = (this.keys.lKey.isDown || this.inputData.lButtonDown);
+  this.inputData.rButtonDown = (this.keys.rKey.isDown || this.inputData.rButtonDown);
 
   // Gamepad update
   if (this.scene.input.gamepad && (this.scene.input.gamepad.total > 0)) {
@@ -91,6 +102,9 @@ Player.prototype.updateInputData = function () {
   if (this.inputData.directonVector.lengthSq() > 1.0) {
     this.inputData.directonVector.normalize();
   }
+  this.inputData.computeMat.identity();
+  this.inputData.computeMat.rotate(Phaser.Math.DegToRad(-1 * this.inputData.cameraAngle.x));
+  this.inputData.directonVector.transformMat3(this.inputData.computeMat);
 };
 Player.prototype.initiateStrike = function () {
   this.currentState = PlayerStates.STRIKING;
@@ -180,6 +194,12 @@ Player.prototype.update = function () {
   }
 
   this.rotation = this.inputData.currentAngle + (Math.PI * 0.5);
+
+  if (this.inputData.lButtonDown) {
+    this.inputData.cameraAngle.x -= GameplayConstants.CameraTurnSpeed;
+  } else if (this.inputData.rButtonDown) {
+    this.inputData.cameraAngle.x += GameplayConstants.CameraTurnSpeed;
+  }
 
   // Agitation
   this.agitation = Math.max(this.agitation - this.agitationCooldownPerFrame, 0);
