@@ -84,7 +84,15 @@ Gameplay.prototype.create = function () {
         this.scene.restart();
     });
 
+    let m = new Monster(this, 85, 100);
+
     this.physics.add.collider(this.player, this.foreground);
+    this.physics.add.overlap(this.player, m, function (player, monster) {
+        const arbitaryPick = 10;
+        player.agitation += arbitaryPick;
+    }, function (player, monster) {
+        return (player.currentState !== PlayerStates.DASHING);
+    });
 };
 Gameplay.prototype.update = function () {
     const agitationRatio = (this.player.agitation / GameplayConstants.AgitationMax);
