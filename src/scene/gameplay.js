@@ -12,7 +12,7 @@ let Gameplay = function (config) {
     this.monsters = [];
 
     this.three = null;
-    this.camera = new THREE.PerspectiveCamera( 70, GAME_WIDTH / GAME_HEIGHT, 1, 1000 );
+    this.camera = new THREE.PerspectiveCamera( 70, GAME_WIDTH / GAME_HEIGHT, 1, 500 );
     this.renderer = null;
     this.threeScene = new THREE.Scene();
     this.sceneMeshData = {};
@@ -20,6 +20,8 @@ let Gameplay = function (config) {
 };
 Gameplay.prototype.init = function () {
     this.renderer = new THREE.WebGLRenderer( { canvas: this.game.canvas, context: this.game.context, antialias: false } );
+    this.renderer.autoClear = false;
+
     this.events.on('shutdown', this.shutdown, this);
 };
 Gameplay.prototype.preload = function () {
@@ -39,22 +41,57 @@ Gameplay.prototype.setupThreeBackground = function () {
         that.updateThreeScene();
 
         threeRenderer.state.reset();
+        threeRenderer.sortObjects = true;
         threeRenderer.render(threeScene, threeCam);
     };
 };
-Gameplay.prototype.initializeThreeScene = function () {
-    this.camera.position.set(0, 0, 400);
+Gameplay.prototype.initializeThreeScene = function (player, wallLayerData, monsters) {
+    this.camera.position.set(0, 4, 4);
+    this.camera.lookAt(0, 0, 0);
 
-    let geometry = new THREE.BoxBufferGeometry( 200, 200, 200 );
-    let material = new THREE.MeshBasicMaterial( { color: 0x440000 } );
+    // Player
+    let debugPlayerGeometry = new THREE.BoxBufferGeometry( 1, 1, 1 );
+    let debugPlayerMaterial = new THREE.MeshBasicMaterial( { color: 0x000088 } );
+    let playerMesh = new THREE.Mesh( debugPlayerGeometry, debugPlayerMaterial );
+    this.threeScene.add(playerMesh);
+    this.sceneMeshData.player = playerMesh;
 
-    let mesh = new THREE.Mesh( geometry, material );
-    this.threeScene.add( mesh );
+    // Debug walls
+    let debugWallGeometry = new THREE.BoxBufferGeometry( 1, 1, 1 );
+    let debugWallMaterial = new THREE.MeshBasicMaterial( { color: 0x560000 } );
+    let debugWallMesh = new THREE.Mesh( debugWallGeometry, debugWallMaterial );
+    wallLayerData.data.forEach(function (column) {
+        column.forEach(function (tile) {
+            if (tile.index === -1) {
+                return;
+            }
 
-    this.sceneMeshData.testMesh = mesh;
+            let wallClone = debugWallMesh.clone();
+            wallClone.position.set(tile.x, 0, tile.y);
+            this.threeScene.add( wallClone );
+        }, this);
+    }, this);
+
+    // enemies
+    let debugMonsterGeometry = new THREE.BoxBufferGeometry( 1, 1, 1 );
+    let debugMonsterMaterial = new THREE.MeshBasicMaterial( { color: 0xFF0000 } );
+    let debugMonsterMesh = new THREE.Mesh( debugMonsterGeometry, debugMonsterMaterial );
+    this.sceneMeshData.monsters = [];
+    monsters.forEach((monster, i) => {
+        let monsterMeshClone = debugMonsterMesh.clone();
+        monsterMeshClone.position.set((monster.x - (monster.width * 0.5)) * INV_GAME_TILE_SIZE, 0, (monster.y - (monster.height * 0.5)) * INV_GAME_TILE_SIZE);
+        this.sceneMeshData.monsters.push(monsterMeshClone);
+        this.threeScene.add( monsterMeshClone );
+    });
 };
 Gameplay.prototype.updateThreeScene = function () {
-    this.sceneMeshData.testMesh.rotation.set((this.player.x / GAME_WIDTH) * Math.PI * 2, (this.player.y / GAME_WIDTH) * Math.PI * 2, 0);
+    this.sceneMeshData.player.position.set((this.player.x - (this.player.width * 0.5)) * INV_GAME_TILE_SIZE, 0, (this.player.y - (this.player.height * 0.5)) * INV_GAME_TILE_SIZE);
+    this.sceneMeshData.player.rotation.y = this.player.inputData.currentAngle * -1;
+
+    const offsetX = Math.sin(this.player.inputData.cameraAngle.x * Phaser.Math.DEG_TO_RAD) * DisplayConstants.CameraDistance;
+    const offsetZ = Math.cos(this.player.inputData.cameraAngle.x * Phaser.Math.DEG_TO_RAD) * DisplayConstants.CameraDistance;
+    this.camera.position.set(this.sceneMeshData.player.position.x + offsetX, DisplayConstants.CameraHeight, this.sceneMeshData.player.position.z + offsetZ);
+    this.camera.lookAt(this.sceneMeshData.player.position);
 };
 Gameplay.prototype.setupEvents = function () {
     this.events.addListener('update', this.player.update, this.player);
@@ -73,7 +110,6 @@ Gameplay.prototype.removeEvents = function () {
 };
 Gameplay.prototype.create = function () {
     this.setupThreeBackground();
-    this.initializeThreeScene();
 
     this.strike = new Strike(this, 0, 0);
     this.player = new Player(this, 128, 128, this.strike, 13, 0.082);
@@ -84,9 +120,9 @@ Gameplay.prototype.create = function () {
     this.foreground.setCollision([14]);
 
     // TODO: restart the scene on appropriate player death
-    let spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
-    spaceKey.on('down', (ev) => {
-        spaceKey.removeAllListeners();
+    let resetKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
+    resetKey.on('down', (ev) => {
+        resetKey.removeAllListeners();
         this.removeEvents();
         this.scene.restart();
     });
@@ -118,6 +154,7 @@ Gameplay.prototype.create = function () {
     this.agitationBar.scrollFactorY = 0;
 
     this.setupEvents();
+    this.initializeThreeScene(this.player, this.foreground.layer, this.monsters);
 };
 Gameplay.prototype.update = function () {
     const agitationRatio = (this.player.agitation / GameplayConstants.AgitationMax);

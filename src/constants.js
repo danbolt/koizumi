@@ -1,6 +1,9 @@
 const GAME_WIDTH = 320;
 const GAME_HEIGHT = 240;
 
+const GAME_TILE_SIZE = 32;
+const INV_GAME_TILE_SIZE = 1 / GAME_TILE_SIZE;
+
 const GameplayConstants = {
   MoveSpeed: 70,
   DashSpeed: 400,
@@ -15,6 +18,11 @@ const GameplayConstants = {
   AgitationMax: 100,
 
   CameraTurnSpeed: 1.87
+};
+
+const DisplayConstants = {
+  CameraDistance: 4,
+  CameraHeight: 4
 };
 
 const PlayerStates = {
