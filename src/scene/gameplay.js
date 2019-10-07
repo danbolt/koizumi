@@ -157,12 +157,7 @@ Gameplay.prototype.create = function () {
     this.monsters.forEach(function (m) { m.visible = false; });
 
     this.physics.add.collider(this.player, this.foreground);
-    this.physics.add.overlap(this.player, this.monsters, function (player, monster) {
-        const arbitaryPick = 1;
-        player.agitation += arbitaryPick;
-    }, function (player, monster) {
-        return (player.currentState !== PlayerStates.DASHING);
-    });
+    this.physics.add.collider(this.player, this.monsters);
 
     this.cameras.cameras[0].startFollow(this.player, true, 0.1, 0.1);
 

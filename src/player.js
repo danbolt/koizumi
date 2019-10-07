@@ -149,12 +149,12 @@ Player.prototype.update = function () {
 
   // NORMAL -> DASHING
   if ((this.currentState === PlayerStates.NORMAL) && this.inputData.aButtonDown) {
-    this.initiateDash();
+    //this.initiateDash();
   }
 
   // NORMAL -> STRIKING
   if ((this.currentState === PlayerStates.NORMAL) && this.inputData.bButtonDown) {
-    this.initiateStrike();
+    //this.initiateStrike();
   }
 
   // NORMAL update
