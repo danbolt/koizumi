@@ -27,6 +27,7 @@ Gameplay.prototype.init = function () {
 Gameplay.prototype.preload = function () {
     this.load.spritesheet('test_sheet', 'asset/image/fromJesse.png', { frameWidth: 32, frameHeight: 32 });
     this.load.binary('roompusher', './asset/model/roompusher.glb');
+    this.load.binary('badboi', './asset/model/badboi.glb');
 
     this.load.image('test_sheet_image', 'asset/image/fromJesse.png');
     this.load.tilemapTiledJSON('test_map', 'asset/map/test_map.json');
@@ -48,8 +49,17 @@ Gameplay.prototype.setupThreeBackground = function () {
 Gameplay.prototype.initializeThreeScene = function (player, wallLayerData, monsters) {
     const loader = new THREE.GLTFLoader();
 
-    this.camera.position.set(0, 4, 4);
-    this.camera.lookAt(0, 0, 0);
+    // standard ambient lighting for principled BSDFs
+    let l = new THREE.AmbientLight(0xFFFFFF);
+    this.threeScene.add(l);
+
+    // TODO: remove this with a real models
+    let dummyFloorGeom = new THREE.PlaneGeometry(9000, 9000);
+    let dummerFloorMaterial = new THREE.MeshBasicMaterial({ color: 0x554444 });
+    let dummyFloorMesh = new THREE.Mesh(dummyFloorGeom, dummerFloorMaterial);
+    dummyFloorMesh.rotation.x = Math.PI * 1.5;
+    dummyFloorMesh.position.y = -0.5;
+    this.threeScene.add(dummyFloorMesh);
 
     // Player
     //let debugPlayerGeometry = new THREE.BoxBufferGeometry( 1, 1, 1 );
@@ -58,8 +68,8 @@ Gameplay.prototype.initializeThreeScene = function (player, wallLayerData, monst
     this.threeScene.add(playerMesh);
     this.sceneMeshData.player = playerMesh;
 
-    const modelData = this.cache.binary.get('roompusher');
-    loader.parse(modelData, 'asset/model/', (gltf) => {
+    const playerModelData = this.cache.binary.get('roompusher');
+    loader.parse(playerModelData, 'asset/model/', (gltf) => {
         for (let i = gltf.scene.children.length - 1; i > -1; i--) {
             // HACK: tweak the scale, position, and rotation
             gltf.scene.position.y = 0.5;
@@ -72,7 +82,7 @@ Gameplay.prototype.initializeThreeScene = function (player, wallLayerData, monst
 
     // Debug walls
     let debugWallGeometry = new THREE.BoxBufferGeometry( 1, 1, 1 );
-    let debugWallMaterial = new THREE.MeshBasicMaterial( { color: 0x560000 } );
+    let debugWallMaterial = new THREE.MeshBasicMaterial( { color: 0x00FFF0 } );
     let debugWallMesh = new THREE.Mesh( debugWallGeometry, debugWallMaterial );
     wallLayerData.data.forEach(function (column) {
         column.forEach(function (tile) {
@@ -87,15 +97,19 @@ Gameplay.prototype.initializeThreeScene = function (player, wallLayerData, monst
     }, this);
 
     // enemies
-    let debugMonsterGeometry = new THREE.BoxBufferGeometry( 1, 1, 1 );
-    let debugMonsterMaterial = new THREE.MeshBasicMaterial( { color: 0xFF0000 } );
-    let debugMonsterMesh = new THREE.Mesh( debugMonsterGeometry, debugMonsterMaterial );
+    let badboiMeshData = this.cache.binary.get('badboi');
     this.sceneMeshData.monsters = [];
     monsters.forEach((monster, i) => {
-        let monsterMeshClone = debugMonsterMesh.clone();
+        let monsterMeshClone = new THREE.Group();
         monsterMeshClone.position.set((monster.x - (monster.width * 0.5)) * INV_GAME_TILE_SIZE, 0, (monster.y - (monster.height * 0.5)) * INV_GAME_TILE_SIZE);
         this.sceneMeshData.monsters.push(monsterMeshClone);
         this.threeScene.add( monsterMeshClone );
+
+        loader.parse(badboiMeshData, 'asset/model/', (gltf) => {
+            let clone = gltf.scene.clone();
+            clone.rotation.y = monster.rotation;
+            monsterMeshClone.add(clone);
+        });
     });
 };
 Gameplay.prototype.updateThreeScene = function () {
@@ -149,7 +163,9 @@ Gameplay.prototype.create = function () {
     const monsterLayer = this.map.getObjectLayer('enemies');
     this.monsters = monsterLayer.objects.map((monsterData) => {
         if (monsterData.type === 'test_monster') {
-            return new Monster(this, monsterData.x, monsterData.y, this.player);
+            let m = new Monster(this, monsterData.x, monsterData.y, this.player);
+            m.rotation = monsterData.rotation;
+            return m;
         }
 
         return null;
@@ -157,7 +173,6 @@ Gameplay.prototype.create = function () {
     this.monsters.forEach(function (m) { m.visible = false; });
 
     this.physics.add.collider(this.player, this.foreground);
-    this.physics.add.collider(this.player, this.monsters);
 
     this.cameras.cameras[0].startFollow(this.player, true, 0.1, 0.1);
 

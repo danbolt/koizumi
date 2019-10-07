@@ -5,7 +5,7 @@ const GAME_TILE_SIZE = 32;
 const INV_GAME_TILE_SIZE = 1 / GAME_TILE_SIZE;
 
 const GameplayConstants = {
-  MoveSpeed: 70,
+  MoveSpeed: 120,
   DashSpeed: 400,
   DashDuration: 120,
   DashToStrikeEarlyWindow: 60,
