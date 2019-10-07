@@ -3,7 +3,6 @@
 let Gameplay = function (config) {
     Phaser.Scene.call(this, config);
 
-    this.agitationBar = null;
     this.player = null;
     this.strike = null;
     this.map = null;
@@ -25,6 +24,8 @@ Gameplay.prototype.init = function () {
     this.events.on('shutdown', this.shutdown, this);
 };
 Gameplay.prototype.preload = function () {
+    // TODO: Move this stuff to another scene
+
     this.load.spritesheet('test_sheet', 'asset/image/fromJesse.png', { frameWidth: 32, frameHeight: 32 });
     this.load.binary('roompusher', './asset/model/roompusher.glb');
     this.load.binary('badboi', './asset/model/badboi.glb');
@@ -52,18 +53,7 @@ Gameplay.prototype.initializeThreeScene = function (player, wallLayerData, monst
     // standard ambient lighting for principled BSDFs
     let l = new THREE.AmbientLight(0xFFFFFF);
     this.threeScene.add(l);
-
-    // TODO: remove this with a real models
-    let dummyFloorGeom = new THREE.PlaneGeometry(9000, 9000);
-    let dummerFloorMaterial = new THREE.MeshBasicMaterial({ color: 0x554444 });
-    let dummyFloorMesh = new THREE.Mesh(dummyFloorGeom, dummerFloorMaterial);
-    dummyFloorMesh.rotation.x = Math.PI * 1.5;
-    dummyFloorMesh.position.y = -0.5;
-    this.threeScene.add(dummyFloorMesh);
-
     // Player
-    //let debugPlayerGeometry = new THREE.BoxBufferGeometry( 1, 1, 1 );
-    //let debugPlayerMaterial = new THREE.MeshBasicMaterial( { color: 0x000088 } );
     let playerMesh = new THREE.Group();
     this.threeScene.add(playerMesh);
     this.sceneMeshData.player = playerMesh;
@@ -80,7 +70,15 @@ Gameplay.prototype.initializeThreeScene = function (player, wallLayerData, monst
         }
     });
 
-    // Debug walls
+    // TODO: remove this with a real model later
+    let dummyFloorGeom = new THREE.PlaneGeometry(9000, 9000);
+    let dummerFloorMaterial = new THREE.MeshBasicMaterial({ color: 0x554444 });
+    let dummyFloorMesh = new THREE.Mesh(dummyFloorGeom, dummerFloorMaterial);
+    dummyFloorMesh.rotation.x = Math.PI * 1.5;
+    dummyFloorMesh.position.y = -0.5;
+    this.threeScene.add(dummyFloorMesh);
+
+    // TODO: remove this with a real model later
     let debugWallGeometry = new THREE.BoxBufferGeometry( 1, 1, 1 );
     let debugWallMaterial = new THREE.MeshBasicMaterial( { color: 0x00FFF0 } );
     let debugWallMesh = new THREE.Mesh( debugWallGeometry, debugWallMaterial );
@@ -155,6 +153,11 @@ Gameplay.prototype.create = function () {
     resetKey.on('down', (ev) => {
         resetKey.removeAllListeners();
         this.removeEvents();
+
+        let uiScene = this.scene.get('InGameUI')
+        if (uiScene) {
+            uiScene.reboot();
+        }
         this.scene.restart();
     });
 
@@ -177,24 +180,15 @@ Gameplay.prototype.create = function () {
     this.cameras.cameras[0].startFollow(this.player, true, 0.1, 0.1);
 
     // UI setup
-    this.agitationBar = this.add.rectangle(GAME_WIDTH * 0.5, 0, 1, 16, 0x333333);
-    this.agitationBar.scrollFactorX = 0;
-    this.agitationBar.scrollFactorY = 0;
-
     this.setupEvents();
     this.initializeThreeScene(this.player, this.foreground.layer, this.monsters);
 };
 Gameplay.prototype.update = function () {
-    const agitationRatio = (this.player.agitation / GameplayConstants.AgitationMax);
-    this.agitationBar.scaleX = agitationRatio * GAME_WIDTH;
-    this.agitationBar.fillColor = Phaser.Display.Color.GetColor(~~((0.5 + 0.5 * agitationRatio) * 255), ~~(0.5 * 255), ~~(0.5 * 255));
-
     this.updateThreeScene();
 };
 Gameplay.prototype.shutdown = function () {
     this.player = null;
     this.strike = null;
-    this.agitationBar = null;
     this.map = null;
     this.foreground = null;
 
