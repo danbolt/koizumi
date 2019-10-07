@@ -46,15 +46,29 @@ Gameplay.prototype.setupThreeBackground = function () {
     };
 };
 Gameplay.prototype.initializeThreeScene = function (player, wallLayerData, monsters) {
+    const loader = new THREE.GLTFLoader();
+
     this.camera.position.set(0, 4, 4);
     this.camera.lookAt(0, 0, 0);
 
     // Player
-    let debugPlayerGeometry = new THREE.BoxBufferGeometry( 1, 1, 1 );
-    let debugPlayerMaterial = new THREE.MeshBasicMaterial( { color: 0x000088 } );
-    let playerMesh = new THREE.Mesh( debugPlayerGeometry, debugPlayerMaterial );
+    //let debugPlayerGeometry = new THREE.BoxBufferGeometry( 1, 1, 1 );
+    //let debugPlayerMaterial = new THREE.MeshBasicMaterial( { color: 0x000088 } );
+    let playerMesh = new THREE.Group();
     this.threeScene.add(playerMesh);
     this.sceneMeshData.player = playerMesh;
+
+    const modelData = this.cache.binary.get('roompusher');
+    loader.parse(modelData, 'asset/model/', (gltf) => {
+        for (let i = gltf.scene.children.length - 1; i > -1; i--) {
+            // HACK: tweak the scale, position, and rotation
+            gltf.scene.position.y = 0.5;
+            gltf.scene.rotation.y = Math.PI * 0.5;
+            gltf.scene.scale.set(0.5, 0.5, 0.5); 
+
+            playerMesh.add(gltf.scene);
+        }
+    });
 
     // Debug walls
     let debugWallGeometry = new THREE.BoxBufferGeometry( 1, 1, 1 );
@@ -113,11 +127,14 @@ Gameplay.prototype.create = function () {
 
     this.strike = new Strike(this, 0, 0);
     this.player = new Player(this, 128, 128, this.strike, 13, 0.082);
+    this.player.visible = false;
+    this.player.strike.visible = false;
 
     this.map = this.add.tilemap('test_map');
     this.map.addTilesetImage('tilesheet', 'test_sheet_image');
     this.foreground = this.map.createStaticLayer('foreground', 'tilesheet');
     this.foreground.setCollision([14]);
+    this.foreground.visible = false;
 
     // TODO: restart the scene on appropriate player death
     let resetKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
@@ -137,6 +154,7 @@ Gameplay.prototype.create = function () {
 
         return null;
     }).filter((newMonster) => { return newMonster !== null});
+    this.monsters.forEach(function (m) { m.visible = false; });
 
     this.physics.add.collider(this.player, this.foreground);
     this.physics.add.overlap(this.player, this.monsters, function (player, monster) {
@@ -160,9 +178,6 @@ Gameplay.prototype.update = function () {
     const agitationRatio = (this.player.agitation / GameplayConstants.AgitationMax);
     this.agitationBar.scaleX = agitationRatio * GAME_WIDTH;
     this.agitationBar.fillColor = Phaser.Display.Color.GetColor(~~((0.5 + 0.5 * agitationRatio) * 255), ~~(0.5 * 255), ~~(0.5 * 255));
-
-    // TODO: remove this
-    //this.cameras.cameras[0].setAngle(this.player.inputData.cameraAngle.x);
 
     this.updateThreeScene();
 };
