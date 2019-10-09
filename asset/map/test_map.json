@@ -19,18 +19,18 @@
                 {
                  "height":32,
                  "id":1,
-                 "name":"one",
+                 "name":"fyodor",
                  "rotation":-176.560685710489,
                  "type":"test_monster",
                  "visible":true,
                  "width":32,
-                 "x":191.01132133528,
-                 "y":320.931043434147
+                 "x":160,
+                 "y":288
                 }, 
                 {
                  "height":32,
                  "id":2,
-                 "name":"rotated me",
+                 "name":"percy",
                  "rotation":45,
                  "type":"test_monster",
                  "visible":true,
@@ -41,7 +41,7 @@
                 {
                  "height":32,
                  "id":3,
-                 "name":"one",
+                 "name":"leo",
                  "rotation":-232.510774657145,
                  "type":"test_monster",
                  "visible":true,
@@ -52,13 +52,13 @@
                 {
                  "height":32,
                  "id":4,
-                 "name":"one",
+                 "name":"josephine",
                  "rotation":-315.373028512316,
                  "type":"test_monster",
                  "visible":true,
                  "width":32,
-                 "x":335.852683528487,
-                 "y":25.3730625612475
+                 "x":416,
+                 "y":-64
                 }],
          "opacity":1,
          "type":"objectgroup",

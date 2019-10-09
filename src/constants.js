@@ -2,6 +2,7 @@ const GAME_WIDTH = 320;
 const GAME_HEIGHT = 240;
 
 const GAME_TILE_SIZE = 32;
+const GAME_TIME_SIZE_SQ = GAME_TILE_SIZE * GAME_TILE_SIZE;
 const INV_GAME_TILE_SIZE = 1 / GAME_TILE_SIZE;
 
 const GameplayConstants = {

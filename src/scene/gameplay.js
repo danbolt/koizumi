@@ -16,6 +16,8 @@ let Gameplay = function (config) {
     this.threeScene = new THREE.Scene();
     this.sceneMeshData = {};
 
+    this.uiScene = null;
+
 };
 Gameplay.prototype.init = function () {
     this.renderer = new THREE.WebGLRenderer( { canvas: this.game.canvas, context: this.game.context, antialias: false } );
@@ -53,21 +55,22 @@ Gameplay.prototype.initializeThreeScene = function (player, wallLayerData, monst
     // standard ambient lighting for principled BSDFs
     let l = new THREE.AmbientLight(0xFFFFFF);
     this.threeScene.add(l);
+
     // Player
     let playerMesh = new THREE.Group();
     this.threeScene.add(playerMesh);
     this.sceneMeshData.player = playerMesh;
 
+
     const playerModelData = this.cache.binary.get('roompusher');
     loader.parse(playerModelData, 'asset/model/', (gltf) => {
-        for (let i = gltf.scene.children.length - 1; i > -1; i--) {
-            // HACK: tweak the scale, position, and rotation
-            gltf.scene.position.y = 0.5;
-            gltf.scene.rotation.y = Math.PI * 0.5;
-            gltf.scene.scale.set(0.5, 0.5, 0.5); 
 
-            playerMesh.add(gltf.scene);
-        }
+        // HACK: tweak the scale, position, and rotation
+        gltf.scene.position.y = 0.5;
+        gltf.scene.rotation.y = Math.PI * 0.5;
+        gltf.scene.scale.set(0.5, 0.5, 0.5); 
+
+        playerMesh.add(gltf.scene);
     });
 
     // TODO: remove this with a real model later
@@ -116,8 +119,10 @@ Gameplay.prototype.updateThreeScene = function () {
 
     const offsetX = Math.sin(this.player.inputData.cameraAngle.x * Phaser.Math.DEG_TO_RAD) * DisplayConstants.CameraDistance;
     const offsetZ = Math.cos(this.player.inputData.cameraAngle.x * Phaser.Math.DEG_TO_RAD) * DisplayConstants.CameraDistance;
-    this.camera.position.set(this.sceneMeshData.player.position.x + offsetX, DisplayConstants.CameraHeight, this.sceneMeshData.player.position.z + offsetZ);
-    this.camera.lookAt(this.sceneMeshData.player.position);
+    this.camera.position.set((this.cameras.cameras[0].midPoint.x * INV_GAME_TILE_SIZE) + offsetX, DisplayConstants.CameraHeight, (this.cameras.cameras[0].midPoint.y * INV_GAME_TILE_SIZE) + offsetZ);
+
+    const targetMesh = this.sceneMeshData.player;
+    this.camera.lookAt(targetMesh.position);
 };
 Gameplay.prototype.setupEvents = function () {
     this.events.addListener('update', this.player.update, this.player);
@@ -135,6 +140,7 @@ Gameplay.prototype.removeEvents = function () {
     }, this);
 };
 Gameplay.prototype.create = function () {
+    this.uiScene = this.scene.get('InGameUI');
     this.setupThreeBackground();
 
     this.strike = new Strike(this, 0, 0);
@@ -148,19 +154,6 @@ Gameplay.prototype.create = function () {
     this.foreground.setCollision([14]);
     this.foreground.visible = false;
 
-    // TODO: restart the scene on appropriate player death
-    let resetKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
-    resetKey.on('down', (ev) => {
-        resetKey.removeAllListeners();
-        this.removeEvents();
-
-        let uiScene = this.scene.get('InGameUI')
-        if (uiScene) {
-            uiScene.reboot();
-        }
-        this.scene.restart();
-    });
-
     this.monsters = [];
 
     const monsterLayer = this.map.getObjectLayer('enemies');
@@ -168,6 +161,7 @@ Gameplay.prototype.create = function () {
         if (monsterData.type === 'test_monster') {
             let m = new Monster(this, monsterData.x, monsterData.y, this.player);
             m.rotation = monsterData.rotation;
+            m.name = monsterData.name;
             return m;
         }
 
@@ -183,8 +177,33 @@ Gameplay.prototype.create = function () {
     this.setupEvents();
     this.initializeThreeScene(this.player, this.foreground.layer, this.monsters);
 };
+Gameplay.prototype.dialogueDone = function () {
+    this.player.currentState = PlayerStates.NORMAL;
+};
 Gameplay.prototype.update = function () {
     this.updateThreeScene();
+
+    // Check for closest monster if able
+    if (this.player.currentState === PlayerStates.NORMAL) {
+        let closeMonster = null;
+        this.monsters.forEach(function (m) {
+            if (Phaser.Math.Distance.Squared(this.player.x, this.player.y, m.x, m.y) < (GAME_TIME_SIZE_SQ * 5.4)) {
+                closeMonster = m;
+            }
+        }, this);
+        if (closeMonster !== null) {
+            this.uiScene.toggleTalkPrompt(true);
+
+            if (this.player.inputData.aButtonDown) {
+                this.uiScene.toggleTalkPrompt(false);
+
+                this.player.currentState = PlayerStates.STRIKING;
+                this.uiScene.startDialogue(closeMonster.name);
+            }
+        } else {
+            this.uiScene.toggleTalkPrompt(false);
+        }
+    }
 };
 Gameplay.prototype.shutdown = function () {
     this.player = null;
