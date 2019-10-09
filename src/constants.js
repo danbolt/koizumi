@@ -18,7 +18,8 @@ const GameplayConstants = {
 
   AgitationMax: 100,
 
-  CameraTurnSpeed: 1.87
+  CameraTurnSpeed: 1.87,
+  CameraFollowDecay: 0.05
 };
 
 const DisplayConstants = {

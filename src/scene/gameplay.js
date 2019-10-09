@@ -61,10 +61,8 @@ Gameplay.prototype.initializeThreeScene = function (player, wallLayerData, monst
     this.threeScene.add(playerMesh);
     this.sceneMeshData.player = playerMesh;
 
-
     const playerModelData = this.cache.binary.get('roompusher');
     loader.parse(playerModelData, 'asset/model/', (gltf) => {
-
         // HACK: tweak the scale, position, and rotation
         gltf.scene.position.y = 0.5;
         gltf.scene.rotation.y = Math.PI * 0.5;
@@ -119,10 +117,10 @@ Gameplay.prototype.updateThreeScene = function () {
 
     const offsetX = Math.sin(this.player.inputData.cameraAngle.x * Phaser.Math.DEG_TO_RAD) * DisplayConstants.CameraDistance;
     const offsetZ = Math.cos(this.player.inputData.cameraAngle.x * Phaser.Math.DEG_TO_RAD) * DisplayConstants.CameraDistance;
-    this.camera.position.set((this.cameras.cameras[0].midPoint.x * INV_GAME_TILE_SIZE) + offsetX, DisplayConstants.CameraHeight, (this.cameras.cameras[0].midPoint.y * INV_GAME_TILE_SIZE) + offsetZ);
+    this.camera.position.set(((this.cameras.cameras[0].scrollX + (this.cameras.cameras[0].displayWidth * 0.5)) * INV_GAME_TILE_SIZE) + offsetX, DisplayConstants.CameraHeight, ((this.cameras.cameras[0].scrollY + (this.cameras.cameras[0].displayHeight * 0.5)) * INV_GAME_TILE_SIZE) + offsetZ);
 
     const targetMesh = this.sceneMeshData.player;
-    this.camera.lookAt(targetMesh.position);
+    this.camera.lookAt(((this.cameras.cameras[0].scrollX + (this.cameras.cameras[0].displayWidth * 0.5)) * INV_GAME_TILE_SIZE), 0, ((this.cameras.cameras[0].scrollY + (this.cameras.cameras[0].displayHeight * 0.5)) * INV_GAME_TILE_SIZE));
 };
 Gameplay.prototype.setupEvents = function () {
     this.events.addListener('update', this.player.update, this.player);
@@ -171,7 +169,7 @@ Gameplay.prototype.create = function () {
 
     this.physics.add.collider(this.player, this.foreground);
 
-    this.cameras.cameras[0].startFollow(this.player, true, 0.1, 0.1);
+    this.cameras.cameras[0].startFollow(this.player, false, GameplayConstants.CameraFollowDecay, GameplayConstants.CameraFollowDecay);
 
     // UI setup
     this.setupEvents();
@@ -179,6 +177,8 @@ Gameplay.prototype.create = function () {
 };
 Gameplay.prototype.dialogueDone = function () {
     this.player.currentState = PlayerStates.NORMAL;
+                this.cameras.cameras[0].pan(this.player.x, this.player.y, 270);
+    this.cameras.cameras[0].startFollow(this.player, false, GameplayConstants.CameraFollowDecay, GameplayConstants.CameraFollowDecay);
 };
 Gameplay.prototype.update = function () {
     this.updateThreeScene();
@@ -199,6 +199,11 @@ Gameplay.prototype.update = function () {
 
                 this.player.currentState = PlayerStates.STRIKING;
                 this.uiScene.startDialogue(closeMonster.name);
+
+                this.cameras.cameras[0].stopFollow();
+                this.cameras.cameras[0].pan(closeMonster.x, closeMonster.y, 300);
+                
+                //this.cameras.cameras[0].startFollow(closeMonster, false, 0.000001, 0.000001);
             }
         } else {
             this.uiScene.toggleTalkPrompt(false);
