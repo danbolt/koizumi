@@ -20,6 +20,14 @@
                  "height":32,
                  "id":1,
                  "name":"fyodor",
+                 "properties":
+                    {
+                     "convo":"convo_1"
+                    },
+                 "propertytypes":
+                    {
+                     "convo":"string"
+                    },
                  "rotation":-176.560685710489,
                  "type":"test_monster",
                  "visible":true,
@@ -31,34 +39,58 @@
                  "height":32,
                  "id":2,
                  "name":"percy",
-                 "rotation":45,
+                 "properties":
+                    {
+                     "convo":"convo_3"
+                    },
+                 "propertytypes":
+                    {
+                     "convo":"string"
+                    },
+                 "rotation":-198.382412780973,
                  "type":"test_monster",
                  "visible":true,
                  "width":32,
-                 "x":288,
-                 "y":32
+                 "x":416,
+                 "y":128
                 }, 
                 {
                  "height":32,
                  "id":3,
                  "name":"leo",
-                 "rotation":-232.510774657145,
+                 "properties":
+                    {
+                     "convo":"convo_2"
+                    },
+                 "propertytypes":
+                    {
+                     "convo":"string"
+                    },
+                 "rotation":-258.334720601777,
                  "type":"test_monster",
                  "visible":true,
                  "width":32,
-                 "x":358.433280502407,
-                 "y":237.042310716058
+                 "x":355.980633940163,
+                 "y":260.573640397281
                 }, 
                 {
                  "height":32,
                  "id":4,
                  "name":"josephine",
-                 "rotation":-315.373028512316,
+                 "properties":
+                    {
+                     "convo":"convo_4"
+                    },
+                 "propertytypes":
+                    {
+                     "convo":"string"
+                    },
+                 "rotation":-239.178474276477,
                  "type":"test_monster",
                  "visible":true,
                  "width":32,
-                 "x":416,
-                 "y":-64
+                 "x":438.085444470704,
+                 "y":-46.9154934260506
                 }],
          "opacity":1,
          "type":"objectgroup",

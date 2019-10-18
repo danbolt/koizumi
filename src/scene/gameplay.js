@@ -34,6 +34,8 @@ Gameplay.prototype.preload = function () {
 
     this.load.image('test_sheet_image', 'asset/image/fromJesse.png');
     this.load.tilemapTiledJSON('test_map', 'asset/map/test_map.json');
+
+    this.load.json('story', 'asset/dialogue/story.json');
 };
 Gameplay.prototype.setupThreeBackground = function () {
     this.three = this.add.extern(); 
@@ -60,8 +62,6 @@ Gameplay.prototype.initializeThreeScene = function (player, wallLayerData, monst
     let playerMesh = new THREE.Group();
     this.threeScene.add(playerMesh);
     this.sceneMeshData.player = playerMesh;
-
-    console.log(this.time);
 
     const playerModelData = this.cache.binary.get('roompusher');
     loader.parse(playerModelData, 'asset/model/', (gltf) => {
@@ -189,6 +189,7 @@ Gameplay.prototype.create = function () {
             let m = new Monster(this, monsterData.x, monsterData.y, this.player);
             m.rotation = monsterData.rotation;
             m.name = monsterData.name;
+            m.convo = monsterData.properties ? monsterData.properties.convo : undefined;
             return m;
         }
 
@@ -220,19 +221,17 @@ Gameplay.prototype.update = function () {
                 closeMonster = m;
             }
         }, this);
-        if (closeMonster !== null) {
+        if (closeMonster !== null && (closeMonster.convo !== undefined)) {
             this.uiScene.toggleTalkPrompt(true);
 
             if (this.player.inputData.aButtonDown) {
                 this.uiScene.toggleTalkPrompt(false);
 
-                this.player.currentState = PlayerStates.STRIKING;
-                this.uiScene.startDialogue(closeMonster.name);
-
                 this.cameras.cameras[0].stopFollow();
                 this.cameras.cameras[0].pan(closeMonster.x, closeMonster.y, 300);
-                
-                //this.cameras.cameras[0].startFollow(closeMonster, false, 0.000001, 0.000001);
+
+                this.player.currentState = PlayerStates.STRIKING;
+                this.uiScene.startDialogue(closeMonster.convo);
             }
         } else {
             this.uiScene.toggleTalkPrompt(false);

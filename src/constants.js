@@ -24,7 +24,10 @@ const GameplayConstants = {
 
 const DisplayConstants = {
   CameraDistance: 4,
-  CameraHeight: 4
+  CameraHeight: 4,
+
+  TextBipTime: 20,
+  EndLineTime: 1000
 };
 
 const PlayerStates = {

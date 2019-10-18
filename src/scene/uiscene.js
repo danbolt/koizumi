@@ -5,17 +5,24 @@ let InGameUI = function () {
     this.talkPromptText = null;
 
     this.gameplayScene = null;
+
+    this.story = null;
 };
 InGameUI.prototype.preload = function () {
     this.load.bitmapFont('newsgeek', 'asset/font/newsgeek.png', 'asset/font/newsgeek.fnt');
+
+    this.load.json('story', 'asset/dialogue/story.json');
 };
 InGameUI.prototype.create = function () {
-    this.dialogueText = this.add.bitmapText(32, 128, 'newsgeek', 'hello im percy');
+    this.dialogueText = this.add.bitmapText(8, 128, 'newsgeek', 'hello im percy');
     this.dialogueText.visible = false;
 
     this.talkPromptText = this.add.bitmapText(GAME_WIDTH * 0.5, GAME_HEIGHT * 0.5, 'newsgeek', 'talk!');
     this.talkPromptText.visible = false;
     this.talkPromptText.setCenterAlign();
+
+    const storyContent = this.cache.json.get('story');
+    this.story = new inkjs.Story(storyContent);
 
     this.gameplayScene = this.scene.get('Gameplay');
 };
@@ -26,6 +33,8 @@ InGameUI.prototype.shutdown = function () {
     this.talkPromptText = null;
 
     this.gameplayScene = null;
+
+    this.story = null;
 };
 
 // Commands from elsewhere
@@ -38,27 +47,34 @@ InGameUI.prototype.toggleTalkPrompt = function(value) {
 InGameUI.prototype.startDialogue = function(key) {
   this.isPresenting = true;
 
-  // HACK: some dummy text for now
-  const q = 'hello im ' + key;
+  this.story.ChoosePathString(key, true, []);
 
   this.dialogueText.text = '';
   this.dialogueText.visible = true;
 
-  let i = 0;
+  let doText = () => {
+    let line = this.story.Continue();
+    let i = 0;
+    let u = () => {
+      i++;
+      this.dialogueText.text = line.substr(0, i);
 
-  let u = () => {
-    i++;
-    this.dialogueText.text = q.substr(0, i);
-
-
-    if (i < q.length) {
-      this.time.delayedCall(20, u, [], this);
-    } else {
-      this.time.delayedCall(1000, () => {
-        this.dialogueText.visible = false;
-        this.gameplayScene.dialogueDone();
-      }, [], this);
-    }
+      if (i < line.length) {
+        this.time.delayedCall(DisplayConstants.TextBipTime, u, [], this);
+      } else {
+        this.time.delayedCall(DisplayConstants.EndLineTime, () => {
+          if (!(this.story.canContinue)) {
+            this.isPresenting = false;
+            this.dialogueText.visible = false;
+            this.gameplayScene.dialogueDone();
+          } else {
+            this.dialogueText.text = '';
+            doText();
+          }
+        }, [], this);
+      }
+    };
+    this.time.delayedCall(DisplayConstants.TextBipTime, u, [], this);
   };
-  this.time.delayedCall(20, u, [], this);
+  doText();
 };
