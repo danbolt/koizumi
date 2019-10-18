@@ -61,14 +61,43 @@ Gameplay.prototype.initializeThreeScene = function (player, wallLayerData, monst
     this.threeScene.add(playerMesh);
     this.sceneMeshData.player = playerMesh;
 
+    console.log(this.time);
+
     const playerModelData = this.cache.binary.get('roompusher');
     loader.parse(playerModelData, 'asset/model/', (gltf) => {
+
         // HACK: tweak the scale, position, and rotation
         gltf.scene.position.y = 0.5;
         gltf.scene.rotation.y = Math.PI * 0.5;
         gltf.scene.scale.set(0.5, 0.5, 0.5); 
 
         playerMesh.add(gltf.scene);
+        let mixer = new THREE.AnimationMixer(gltf.scene);
+        const idleClip = THREE.AnimationClip.findByName(gltf.animations, 'idle');
+        const idleAction = mixer.clipAction(idleClip);
+        idleAction.play();
+        const runClip = THREE.AnimationClip.findByName(gltf.animations, 'run');
+        const runAction = mixer.clipAction(runClip);
+        runAction.timeScale = 2.1;
+        runAction.play();
+
+        //var helper = new THREE.SkeletonHelper( gltf.scene );
+        //helper.material.linewidth = 3;
+        //this.threeScene.add( helper );
+
+        this.events.addListener('update', () => {
+            if (this.player.body.velocity.lengthSq() < 0.1) {
+                runAction.stop();
+                idleAction.play();
+            } else {
+                idleAction.stop();
+                runAction.play();
+            }
+
+            // TODO: variable timestep this for lower framerates
+            const sixtyFramesPerSecond = 0.016;
+            mixer.update(sixtyFramesPerSecond);
+        });
     });
 
     // TODO: remove this with a real model later

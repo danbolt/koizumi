@@ -35,8 +35,8 @@
                  "type":"test_monster",
                  "visible":true,
                  "width":32,
-                 "x":160,
-                 "y":128
+                 "x":288,
+                 "y":32
                 }, 
                 {
                  "height":32,
