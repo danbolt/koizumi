@@ -1,11 +1,22 @@
 -> top_knot
 
 === convo_1 ===
-This is a real big day for me.
-I'm finally going to clean my fridge.
-...like...
-...there's a lot of old stuff in there!
-Probably 3 half-empty jars of pickles
+= opener
+Hey, question for you.
+Do you like pickles?
++ [Yeah]
+    -> do_like
++ [No!]
+    -> dont_like
+
+= do_like
+    Nice. Me too.
+    -> DONE
+
+= dont_like
+    Not even a bit?
+    Are you sure there isn't something wrong with you?
+    -> DONE
 -> DONE
 
 === convo_2 ===
@@ -30,6 +41,6 @@ The lizard people are disguised everywhere
 === top_knot ===
 Jella: Hello world!
 Michael: What now? 
-* [uhhh] -> top_knot
+* [uhhh] -> convo_1
 * [hmm] -> top_knot
 + [...] -> DONE

@@ -1,12 +1,14 @@
 let InGameUI = function () {
-    this.isPresenting = false;
+  this.keyboard = null;
+  this.isPresenting = false;
 
-    this.dialogueText = null;
-    this.talkPromptText = null;
+  this.choiceText = null;
+  this.dialogueText = null;
+  this.talkPromptText = null;
 
-    this.gameplayScene = null;
+  this.gameplayScene = null;
 
-    this.story = null;
+  this.story = null;
 };
 InGameUI.prototype.preload = function () {
     this.load.bitmapFont('newsgeek', 'asset/font/newsgeek.png', 'asset/font/newsgeek.fnt');
@@ -14,27 +16,32 @@ InGameUI.prototype.preload = function () {
     this.load.json('story', 'asset/dialogue/story.json');
 };
 InGameUI.prototype.create = function () {
-    this.dialogueText = this.add.bitmapText(8, 128, 'newsgeek', 'hello im percy');
-    this.dialogueText.visible = false;
+  this.keyboard = this.scene.scene.input.keyboard;
 
-    this.talkPromptText = this.add.bitmapText(GAME_WIDTH * 0.5, GAME_HEIGHT * 0.5, 'newsgeek', 'talk!');
-    this.talkPromptText.visible = false;
-    this.talkPromptText.setCenterAlign();
+  this.choiceText = this.add.bitmapText(16, 16, 'newsgeek', '');
+  this.dialogueText = this.add.bitmapText(8, 128, 'newsgeek', 'hello im percy');
+  this.dialogueText.visible = false;
 
-    const storyContent = this.cache.json.get('story');
-    this.story = new inkjs.Story(storyContent);
+  this.talkPromptText = this.add.bitmapText(GAME_WIDTH * 0.5, GAME_HEIGHT * 0.5, 'newsgeek', 'talk!');
+  this.talkPromptText.visible = false;
+  this.talkPromptText.setCenterAlign();
 
-    this.gameplayScene = this.scene.get('Gameplay');
+  const storyContent = this.cache.json.get('story');
+  this.story = new inkjs.Story(storyContent);
+
+  this.gameplayScene = this.scene.get('Gameplay');
 };
 InGameUI.prototype.shutdown = function () {
-    this.isPresenting = false;
+  this.keyboard = null;
+  this.isPresenting = false;
 
-    this.dialogueText = null;
-    this.talkPromptText = null;
+  this.choiceText = null;
+  this.dialogueText = null;
+  this.talkPromptText = null;
 
-    this.gameplayScene = null;
+  this.gameplayScene = null;
 
-    this.story = null;
+  this.story = null;
 };
 
 // Commands from elsewhere
@@ -52,6 +59,49 @@ InGameUI.prototype.startDialogue = function(key) {
   this.dialogueText.text = '';
   this.dialogueText.visible = true;
 
+  let doChoices = () => {
+    const choices = this.story.currentChoices;
+
+    let currentChoiceIndex = 0;
+    let refreshChoiceText = () => {
+      const choiceText = this.choiceText;
+      choiceText.text = '';
+      choices.forEach((choice, choiceIndex) => {
+        if (choiceIndex === currentChoiceIndex) {
+          choiceText.text += '>';
+        } else {
+          choiceText.text += ' ';
+        }
+
+        choiceText.text += choice.text;
+        choiceText.text += '\n';
+      });
+    };
+    refreshChoiceText();
+
+    // TODO: make these user-settable for accessibility
+    const downFunc = function (event) {
+      currentChoiceIndex = (currentChoiceIndex + 1) % choices.length;
+      refreshChoiceText();
+    };
+    const upFunc = function (event) {
+      currentChoiceIndex = (currentChoiceIndex - 1 + choices.length) % choices.length;
+      refreshChoiceText();
+    };
+    const selectFunc = function (event) {
+      this.choiceText.text = '';
+      this.input.keyboard.removeListener('keydown-S', downFunc, this);
+      this.input.keyboard.removeListener('keydown-W', upFunc, this);
+      this.input.keyboard.removeListener('keydown-X', selectFunc, this);
+
+      this.story.ChooseChoiceIndex(currentChoiceIndex);
+      doText();
+    }
+    this.input.keyboard.on('keydown-S', downFunc, this);
+    this.input.keyboard.on('keydown-W', upFunc, this);
+    this.input.keyboard.on('keydown-X', selectFunc, this);
+  };
+
   let doText = () => {
     let line = this.story.Continue();
     let i = 0;
@@ -63,14 +113,22 @@ InGameUI.prototype.startDialogue = function(key) {
         this.time.delayedCall(DisplayConstants.TextBipTime, u, [], this);
       } else {
         this.time.delayedCall(DisplayConstants.EndLineTime, () => {
-          if (!(this.story.canContinue)) {
+          // If we can't continue and there are no choices, end the dialogue.
+          if ((!(this.story.canContinue)) && (this.story.currentChoices.length < 1)) {
             this.isPresenting = false;
             this.dialogueText.visible = false;
             this.gameplayScene.dialogueDone();
-          } else {
-            this.dialogueText.text = '';
-            doText();
+            return;
           }
+
+          // If we can't continue but there are choices, enter the choice state?
+          if ((!(this.story.canContinue)) && (this.story.currentChoices.length > 0)) {
+            doChoices();
+            return;
+          }
+
+          this.dialogueText.text = '';
+          doText();
         }, [], this);
       }
     };
