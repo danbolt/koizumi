@@ -14,8 +14,9 @@ Do you like pickles?
     -> DONE
 
 = dont_like
+    Really?
     Not even a bit?
-    Are you sure there isn't something wrong with you?
+    I don't really believe that.
     -> DONE
 -> DONE
 
@@ -28,14 +29,12 @@ Probably being trapped...
 -> DONE
 
 === convo_3 ===
-Yeah, I think he left earlier
-Hope he got his flight
+SNK bring me back plz
 -> DONE
 
 === convo_4 ===
-He's a fool for trusting airplanes
-He'll be replaced by a lizard person!
-The lizard people are disguised everywhere
+Do you think lizard people...
+...are real?
 -> DONE
 
 === top_knot ===

@@ -22,11 +22,13 @@
                  "name":"fyodor",
                  "properties":
                     {
-                     "convo":"convo_1"
+                     "convo":"convo_1",
+                     "mesh":"badboi"
                     },
                  "propertytypes":
                     {
-                     "convo":"string"
+                     "convo":"string",
+                     "mesh":"string"
                     },
                  "rotation":-176.560685710489,
                  "type":"test_monster",
@@ -41,11 +43,13 @@
                  "name":"percy",
                  "properties":
                     {
-                     "convo":"convo_3"
+                     "convo":"convo_3",
+                     "mesh":"ref"
                     },
                  "propertytypes":
                     {
-                     "convo":"string"
+                     "convo":"string",
+                     "mesh":"string"
                     },
                  "rotation":-198.382412780973,
                  "type":"test_monster",
@@ -60,11 +64,13 @@
                  "name":"leo",
                  "properties":
                     {
-                     "convo":"convo_2"
+                     "convo":"convo_2",
+                     "mesh":"badboi"
                     },
                  "propertytypes":
                     {
-                     "convo":"string"
+                     "convo":"string",
+                     "mesh":"string"
                     },
                  "rotation":-258.334720601777,
                  "type":"test_monster",
@@ -79,11 +85,13 @@
                  "name":"josephine",
                  "properties":
                     {
-                     "convo":"convo_4"
+                     "convo":"convo_4",
+                     "mesh":"badboi"
                     },
                  "propertytypes":
                     {
-                     "convo":"string"
+                     "convo":"string",
+                     "mesh":"string"
                     },
                  "rotation":-239.178474276477,
                  "type":"test_monster",

@@ -31,6 +31,7 @@ Gameplay.prototype.preload = function () {
     this.load.spritesheet('test_sheet', 'asset/image/fromJesse.png', { frameWidth: 32, frameHeight: 32 });
     this.load.binary('roompusher', './asset/model/roompusher.glb');
     this.load.binary('badboi', './asset/model/badboi.glb');
+    this.load.binary('ref', './asset/model/ref.glb');
 
     this.load.image('test_sheet_image', 'asset/image/fromJesse.png');
     this.load.tilemapTiledJSON('test_map', 'asset/map/test_map.json');
@@ -125,20 +126,21 @@ Gameplay.prototype.initializeThreeScene = function (player, wallLayerData, monst
     }, this);
 
     // enemies
-    let badboiMeshData = this.cache.binary.get('badboi');
+    
     this.sceneMeshData.monsters = [];
     monsters.forEach((monster, i) => {
+        let badboiMeshData = this.cache.binary.get(monster.mesh);
         let monsterMeshClone = new THREE.Group();
         monsterMeshClone.position.set((monster.x - (monster.width * 0.5)) * INV_GAME_TILE_SIZE, 0, (monster.y - (monster.height * 0.5)) * INV_GAME_TILE_SIZE);
         this.sceneMeshData.monsters.push(monsterMeshClone);
         this.threeScene.add( monsterMeshClone );
 
         loader.parse(badboiMeshData, 'asset/model/', (gltf) => {
-            let clone = gltf.scene.clone();
+            let clone = gltf.scene
             clone.rotation.y = monster.rotation;
             monsterMeshClone.add(clone);
         });
-    });
+    }, this);
 };
 Gameplay.prototype.updateThreeScene = function () {
     this.sceneMeshData.player.position.set((this.player.x - (this.player.width * 0.5)) * INV_GAME_TILE_SIZE, 0, (this.player.y - (this.player.height * 0.5)) * INV_GAME_TILE_SIZE);
@@ -190,6 +192,7 @@ Gameplay.prototype.create = function () {
             m.rotation = monsterData.rotation;
             m.name = monsterData.name;
             m.convo = monsterData.properties ? monsterData.properties.convo : undefined;
+            m.mesh = monsterData.properties ? monsterData.properties.mesh : undefined;
             return m;
         }
 
