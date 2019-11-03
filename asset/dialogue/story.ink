@@ -29,12 +29,19 @@ Probably being trapped...
 -> DONE
 
 === convo_3 ===
-SNK bring me back plz
+Not goona lie... #speaker=athena
+lately my aesthetic has been...
+finding the lizard people.
 -> DONE
 
 === convo_4 ===
-Do you think lizard people...
-...are real?
+Not goona lie... #speaker=josephine
+I think Psycho Soldier's a bad game
+HEY!  #speaker=athena #animation=athena,nod
+I heard that!
+Yikes! #speaker=josephine
+I better lay low for a while.
+Until I can voice my SNK free speech.
 -> DONE
 
 === top_knot ===

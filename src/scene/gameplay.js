@@ -15,6 +15,8 @@ let Gameplay = function (config) {
     this.renderer = null;
     this.threeScene = new THREE.Scene();
     this.sceneMeshData = {};
+    this.actorTable = {};
+    this.mixers = [];
 
     this.uiScene = null;
 
@@ -63,6 +65,7 @@ Gameplay.prototype.initializeThreeScene = function (player, wallLayerData, monst
     let playerMesh = new THREE.Group();
     this.threeScene.add(playerMesh);
     this.sceneMeshData.player = playerMesh;
+    this.actorTable['player'] = { MESH: player };
 
     const playerModelData = this.cache.binary.get('roompusher');
     loader.parse(playerModelData, 'asset/model/', (gltf) => {
@@ -74,6 +77,7 @@ Gameplay.prototype.initializeThreeScene = function (player, wallLayerData, monst
 
         playerMesh.add(gltf.scene);
         let mixer = new THREE.AnimationMixer(gltf.scene);
+        this.mixers.push(mixer);
         const idleClip = THREE.AnimationClip.findByName(gltf.animations, 'idle');
         const idleAction = mixer.clipAction(idleClip);
         idleAction.play();
@@ -94,10 +98,6 @@ Gameplay.prototype.initializeThreeScene = function (player, wallLayerData, monst
                 idleAction.stop();
                 runAction.play();
             }
-
-            // TODO: variable timestep this for lower framerates
-            const sixtyFramesPerSecond = 0.016;
-            mixer.update(sixtyFramesPerSecond);
         });
     });
 
@@ -125,8 +125,7 @@ Gameplay.prototype.initializeThreeScene = function (player, wallLayerData, monst
         }, this);
     }, this);
 
-    // enemies
-    
+    // characters
     this.sceneMeshData.monsters = [];
     monsters.forEach((monster, i) => {
         let badboiMeshData = this.cache.binary.get(monster.mesh);
@@ -136,9 +135,21 @@ Gameplay.prototype.initializeThreeScene = function (player, wallLayerData, monst
         this.threeScene.add( monsterMeshClone );
 
         loader.parse(badboiMeshData, 'asset/model/', (gltf) => {
-            let clone = gltf.scene
-            clone.rotation.y = monster.rotation;
-            monsterMeshClone.add(clone);
+            let meshScene = gltf.scene;
+            meshScene.rotation.y = monster.rotation;
+            monsterMeshClone.add(meshScene);
+            this.actorTable[monster.name] = { MESH: monster };
+
+            if (gltf.animations.length > 0) {
+                let mixer = new THREE.AnimationMixer(meshScene);
+                this.mixers.push(mixer);
+                gltf.animations.forEach((animationData) => {
+                    const action = mixer.clipAction(animationData);
+                    action.loop = THREE.LoopOnce;
+                    this.actorTable[monster.name][animationData.name] = action;
+                    //console.log(this.actorTable);
+                });
+            }
         });
     }, this);
 };
@@ -210,10 +221,44 @@ Gameplay.prototype.create = function () {
 };
 Gameplay.prototype.dialogueDone = function () {
     this.player.currentState = PlayerStates.NORMAL;
-                this.cameras.cameras[0].pan(this.player.x, this.player.y, 270);
+    this.cameras.cameras[0].pan(this.player.x, this.player.y, 200);
     this.cameras.cameras[0].startFollow(this.player, false, GameplayConstants.CameraFollowDecay, GameplayConstants.CameraFollowDecay);
 };
+Gameplay.prototype.panToSpeaker = function(speakerName) {
+    if (this.player.currentState !== PlayerStates.STRIKING) {
+        console.warn('Tried to pan to ' + speakerName + ' while not in dialogue!')
+        return;
+    }
+
+    if (this.actorTable[speakerName] === undefined) {
+        console.warn('speaker ' + speakerName + ' not found in actor table!');
+        return;
+    }
+    const speaker = this.actorTable[speakerName].MESH;
+    this.cameras.cameras[0].pan(speaker.x, speaker.y, 300);
+};
+Gameplay.prototype.playCharacterAnimation = function(character, animationName) {
+    const actor = this.actorTable[character];
+    if (actor === undefined) {
+        console.warn('could not find actor ' + character + 'for animating with ' + animationName);
+        return;
+    }
+
+    const anim = actor[animationName];
+    if (anim === undefined) {
+        console.warn('could not find animation ' + animationName + 'for ' + character);
+        return;
+    }
+
+    anim.reset();
+    anim.play();
+};
 Gameplay.prototype.update = function () {
+    this.mixers.forEach((mixer) => {
+        // TODO: variable timestep this for lower framerates
+        const sixtyFramesPerSecond = 0.016;
+        mixer.update(sixtyFramesPerSecond);
+    })
     this.updateThreeScene();
 
     // Check for closest monster if able
@@ -231,7 +276,6 @@ Gameplay.prototype.update = function () {
                 this.uiScene.toggleTalkPrompt(false);
 
                 this.cameras.cameras[0].stopFollow();
-                this.cameras.cameras[0].pan(closeMonster.x, closeMonster.y, 300);
 
                 this.player.currentState = PlayerStates.STRIKING;
                 this.uiScene.startDialogue(closeMonster.convo);
@@ -254,4 +298,6 @@ Gameplay.prototype.shutdown = function () {
     }
     this.three = null;
     this.sceneMeshData = {};
+    this.actorTable = null;
+    this.mixers = [];
 };

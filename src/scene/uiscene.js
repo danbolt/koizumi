@@ -104,6 +104,36 @@ InGameUI.prototype.startDialogue = function(key) {
 
   let doText = () => {
     let line = this.story.Continue();
+
+    const tags = this.story.currentTags;
+    tags.forEach((tagString) => {
+      const splitted = tagString.split('=');
+      if (tagString.length < 2) {
+        return;
+      }
+
+      const tagType = splitted[0];
+      const tagData = splitted[1];
+
+      // Speaker panning
+      if (tagType === 'speaker') {
+        this.gameplayScene.panToSpeaker(tagData);
+        return;
+      }
+
+      // Animation playing
+      if (tagType === 'animation') {
+        let splitData = tagData.split(',');
+        if (splitData.length < 2) {
+          console.warn('Bad animation pair data: ' + tagData);
+          return;
+        }
+
+        this.gameplayScene.playCharacterAnimation(splitData[0], splitData[1]);
+        return;
+      }
+    });
+
     let i = 0;
     let u = () => {
       i++;
