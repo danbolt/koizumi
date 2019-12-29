@@ -2,7 +2,7 @@
 
 === convo_1 ===
 = opener
-Hey, question for you.
+Hey, question for you. #speaker=fyodor
 Do you like pickles?
 + [Yeah]
     -> do_like
@@ -10,11 +10,11 @@ Do you like pickles?
     -> dont_like
 
 = do_like
-    Nice. Me too.
+    Nice. Me too. #animation=fyodor,jump
     -> DONE
 
 = dont_like
-    Really?
+    Really? #animation=fyodor,pontificate
     Not even a bit?
     I don't really believe that.
     -> DONE

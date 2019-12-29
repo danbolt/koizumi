@@ -33,6 +33,7 @@ Gameplay.prototype.preload = function () {
     this.load.spritesheet('test_sheet', 'asset/image/fromJesse.png', { frameWidth: 32, frameHeight: 32 });
     this.load.binary('roompusher', './asset/model/roompusher.glb');
     this.load.binary('badboi', './asset/model/badboi.glb');
+    this.load.binary('green_shrimp', './asset/model/green_shrimp.glb');
     this.load.binary('ref', './asset/model/ref.glb');
 
     this.load.image('test_sheet_image', 'asset/image/fromJesse.png');
@@ -130,13 +131,13 @@ Gameplay.prototype.initializeThreeScene = function (player, wallLayerData, monst
     monsters.forEach((monster, i) => {
         let badboiMeshData = this.cache.binary.get(monster.mesh);
         let monsterMeshClone = new THREE.Group();
+        monsterMeshClone.rotation.y = monster.rotation;
         monsterMeshClone.position.set((monster.x - (monster.width * 0.5)) * INV_GAME_TILE_SIZE, 0, (monster.y - (monster.height * 0.5)) * INV_GAME_TILE_SIZE);
         this.sceneMeshData.monsters.push(monsterMeshClone);
         this.threeScene.add( monsterMeshClone );
 
         loader.parse(badboiMeshData, 'asset/model/', (gltf) => {
             let meshScene = gltf.scene;
-            meshScene.rotation.y = monster.rotation;
             monsterMeshClone.add(meshScene);
             this.actorTable[monster.name] = { MESH: monster };
 

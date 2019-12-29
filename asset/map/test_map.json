@@ -23,19 +23,19 @@
                  "properties":
                     {
                      "convo":"convo_1",
-                     "mesh":"badboi"
+                     "mesh":"green_shrimp"
                     },
                  "propertytypes":
                     {
                      "convo":"string",
                      "mesh":"string"
                     },
-                 "rotation":-176.560685710489,
+                 "rotation":27.2982674947626,
                  "type":"test_monster",
                  "visible":true,
                  "width":32,
-                 "x":160,
-                 "y":288
+                 "x":193.675038868173,
+                 "y":277.496170920193
                 }, 
                 {
                  "height":32,
