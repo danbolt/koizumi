@@ -36,6 +36,8 @@ Gameplay.prototype.preload = function () {
     this.load.binary('green_shrimp', './asset/model/green_shrimp.glb');
     this.load.binary('ref', './asset/model/ref.glb');
 
+    this.load.binary('test_map', 'asset/model/test_map.glb');
+
     this.load.image('test_sheet_image', 'asset/image/fromJesse.png');
     this.load.tilemapTiledJSON('test_map', 'asset/map/test_map.json');
 
@@ -55,11 +57,12 @@ Gameplay.prototype.setupThreeBackground = function () {
         threeRenderer.render(threeScene, threeCam);
     };
 };
-Gameplay.prototype.initializeThreeScene = function (player, wallLayerData, monsters) {
+Gameplay.prototype.initializeThreeScene = function (player, wallLayerData, monsters, map) {
     const loader = new THREE.GLTFLoader();
 
     // standard ambient lighting for principled BSDFs
     let l = new THREE.AmbientLight(0xFFFFFF);
+    l.intensity = 1;
     this.threeScene.add(l);
 
     // Player
@@ -67,6 +70,11 @@ Gameplay.prototype.initializeThreeScene = function (player, wallLayerData, monst
     this.threeScene.add(playerMesh);
     this.sceneMeshData.player = playerMesh;
     this.actorTable['player'] = { MESH: player };
+
+    let playerLight = new THREE.PointLight(0xFFFF77, 10, 10);
+    playerLight.position.set(0.15, 0, 0);
+    playerLight.decay = 0.5;
+    playerMesh.add(playerLight);
 
     const playerModelData = this.cache.binary.get('roompusher');
     loader.parse(playerModelData, 'asset/model/', (gltf) => {
@@ -102,29 +110,39 @@ Gameplay.prototype.initializeThreeScene = function (player, wallLayerData, monst
         });
     });
 
-    // TODO: remove this with a real model later
-    let dummyFloorGeom = new THREE.PlaneGeometry(9000, 9000);
-    let dummerFloorMaterial = new THREE.MeshBasicMaterial({ color: 0x554444 });
-    let dummyFloorMesh = new THREE.Mesh(dummyFloorGeom, dummerFloorMaterial);
-    dummyFloorMesh.rotation.x = Math.PI * 1.5;
-    dummyFloorMesh.position.y = -0.5;
-    this.threeScene.add(dummyFloorMesh);
+    // If we have a map mesh, try loading that. If we don't, then create some dummy cubes and a floor for now
+    if (map.properties && map.properties.mesh) {
+        const mapMeshName = map.properties.mesh;
+        const mapMeshData = this.cache.binary.get(mapMeshName);
 
-    // TODO: remove this with a real model later
-    let debugWallGeometry = new THREE.BoxBufferGeometry( 1, 1, 1 );
-    let debugWallMaterial = new THREE.MeshBasicMaterial( { color: 0x00FFF0 } );
-    let debugWallMesh = new THREE.Mesh( debugWallGeometry, debugWallMaterial );
-    wallLayerData.data.forEach(function (column) {
-        column.forEach(function (tile) {
-            if (tile.index === -1) {
-                return;
-            }
+        loader.parse(mapMeshData, 'asset/model/', (gltf) => {
+            this.threeScene.add(gltf.scene);
+        });
+    } else {
+        // TODO: remove this with a real model later
+        let dummyFloorGeom = new THREE.PlaneGeometry(9000, 9000);
+        let dummerFloorMaterial = new THREE.MeshBasicMaterial({ color: 0x554444 });
+        let dummyFloorMesh = new THREE.Mesh(dummyFloorGeom, dummerFloorMaterial);
+        dummyFloorMesh.rotation.x = Math.PI * 1.5;
+        dummyFloorMesh.position.y = -0.5;
+        this.threeScene.add(dummyFloorMesh);
 
-            let wallClone = debugWallMesh.clone();
-            wallClone.position.set(tile.x, 0, tile.y);
-            this.threeScene.add( wallClone );
+        // TODO: remove this with a real model later
+        let debugWallGeometry = new THREE.BoxBufferGeometry( 1, 1, 1 );
+        let debugWallMaterial = new THREE.MeshBasicMaterial( { color: 0x00FFF0 } );
+        let debugWallMesh = new THREE.Mesh( debugWallGeometry, debugWallMaterial );
+        wallLayerData.data.forEach(function (column) {
+            column.forEach(function (tile) {
+                if (tile.index === -1) {
+                    return;
+                }
+
+                let wallClone = debugWallMesh.clone();
+                wallClone.position.set(tile.x, 0, tile.y);
+                this.threeScene.add( wallClone );
+            }, this);
         }, this);
-    }, this);
+    }
 
     // characters
     this.sceneMeshData.monsters = [];
@@ -218,7 +236,7 @@ Gameplay.prototype.create = function () {
 
     // UI setup
     this.setupEvents();
-    this.initializeThreeScene(this.player, this.foreground.layer, this.monsters);
+    this.initializeThreeScene(this.player, this.foreground.layer, this.monsters, this.map);
 };
 Gameplay.prototype.dialogueDone = function () {
     this.player.currentState = PlayerStates.NORMAL;

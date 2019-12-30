@@ -49,7 +49,9 @@ InGameUI.prototype.reboot = function () {
     this.scene.restart();
 };
 InGameUI.prototype.toggleTalkPrompt = function(value) {
-  this.talkPromptText.visible = value;
+  if (this.talkPromptText) {
+    this.talkPromptText.visible = value;
+  }
 };
 InGameUI.prototype.startDialogue = function(key) {
   this.isPresenting = true;

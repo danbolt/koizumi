@@ -34,8 +34,8 @@
                  "type":"test_monster",
                  "visible":true,
                  "width":32,
-                 "x":193.675038868173,
-                 "y":277.496170920193
+                 "x":128,
+                 "y":224
                 }, 
                 {
                  "height":32,
@@ -72,12 +72,12 @@
                      "convo":"string",
                      "mesh":"string"
                     },
-                 "rotation":-258.334720601777,
+                 "rotation":-418.751960806123,
                  "type":"test_monster",
                  "visible":true,
                  "width":32,
-                 "x":355.980633940163,
-                 "y":260.573640397281
+                 "x":311.116591963947,
+                 "y":241.813396493663
                 }, 
                 {
                  "height":32,
@@ -128,6 +128,14 @@
         }],
  "nextobjectid":5,
  "orientation":"orthogonal",
+ "properties":
+    {
+     "mesh":"test_map"
+    },
+ "propertytypes":
+    {
+     "mesh":"string"
+    },
  "renderorder":"right-down",
  "tiledversion":"1.1.6",
  "tileheight":32,
