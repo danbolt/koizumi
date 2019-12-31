@@ -16,6 +16,7 @@ let Player = function (scene, x, y, strike, agitationPerStrike, agitationCooldow
 
   scene.add.existing(this);
   scene.physics.add.existing(this);
+  this.scene = scene;
 
   this.body.setSize(15, 15, true);
 
@@ -145,6 +146,10 @@ Player.prototype.initiateDash = function () {
   }, [], this);
 };
 Player.prototype.update = function () {
+  if (this.scene === undefined) {
+    return;
+  }
+  
   this.updateInputData();
 
   // NORMAL -> DASHING

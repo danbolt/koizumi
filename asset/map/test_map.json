@@ -119,14 +119,25 @@
         {
          "draworder":"topdown",
          "name":"exits",
-         "objects":[],
+         "objects":[
+                {
+                 "height":96,
+                 "id":5,
+                 "name":"test_map_2",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":224,
+                 "x":0,
+                 "y":-96
+                }],
          "opacity":1,
          "type":"objectgroup",
          "visible":true,
          "x":0,
          "y":0
         }],
- "nextobjectid":5,
+ "nextobjectid":6,
  "orientation":"orthogonal",
  "properties":
     {

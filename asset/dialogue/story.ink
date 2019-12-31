@@ -43,6 +43,13 @@ I better lay low for a while.
 Until I can voice my SNK free speech.
 -> DONE
 
+=== convo_5 ===
+No one here. #speaker=curtis
+Just me!
+How are you today?
+... aight.
+-> DONE
+
 === top_knot ===
 Jella: Hello world!
 Michael: What now? 

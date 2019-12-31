@@ -22,6 +22,6 @@ let main = function() {
 
     game.scene.add('Gameplay', Gameplay, false);
     game.scene.add('InGameUI', InGameUI, false);
-    game.scene.start('Gameplay');
+    game.scene.start('Gameplay', {});
     game.scene.start('InGameUI');
 };

@@ -18,12 +18,17 @@ let Gameplay = function (config) {
     this.actorTable = {};
     this.mixers = [];
 
+    this.mapKey = '';
+
     this.uiScene = null;
 
+    this.initialized = false;
 };
-Gameplay.prototype.init = function () {
+Gameplay.prototype.init = function (sceneData) {
     this.renderer = new THREE.WebGLRenderer( { canvas: this.game.canvas, context: this.game.context, antialias: false } );
     this.renderer.autoClear = false;
+
+    this.mapKey = sceneData.map ? sceneData.map : 'test_map';
 
     this.events.on('shutdown', this.shutdown, this);
 };
@@ -36,10 +41,10 @@ Gameplay.prototype.preload = function () {
     this.load.binary('green_shrimp', './asset/model/green_shrimp.glb');
     this.load.binary('ref', './asset/model/ref.glb');
 
-    this.load.binary('test_map', 'asset/model/test_map.glb');
+    this.load.binary(this.mapKey, 'asset/model/' + this.mapKey + '.glb');
+    this.load.tilemapTiledJSON(this.mapKey, 'asset/map/' + this.mapKey + '.json');
 
     this.load.image('test_sheet_image', 'asset/image/fromJesse.png');
-    this.load.tilemapTiledJSON('test_map', 'asset/map/test_map.json');
 
     this.load.json('story', 'asset/dialogue/story.json');
 };
@@ -62,7 +67,7 @@ Gameplay.prototype.initializeThreeScene = function (player, wallLayerData, monst
 
     // standard ambient lighting for principled BSDFs
     let l = new THREE.AmbientLight(0xFFFFFF);
-    l.intensity = 1;
+    l.intensity = 2.0
     this.threeScene.add(l);
 
     // Player
@@ -71,7 +76,7 @@ Gameplay.prototype.initializeThreeScene = function (player, wallLayerData, monst
     this.sceneMeshData.player = playerMesh;
     this.actorTable['player'] = { MESH: player };
 
-    let playerLight = new THREE.PointLight(0xFFFF77, 10, 10);
+    let playerLight = new THREE.PointLight(0xFFFF77, 2, 10);
     playerLight.position.set(0.15, 0, 0);
     playerLight.decay = 0.5;
     playerMesh.add(playerLight);
@@ -144,6 +149,15 @@ Gameplay.prototype.initializeThreeScene = function (player, wallLayerData, monst
         }, this);
     }
 
+    const exitLightMaterial = new THREE.MeshBasicMaterial( { color: 0xFFFFFF, side: THREE.BackSide, opacity: 0.5, transparent: true} );
+    const exitLayer = this.map.getObjectLayer('exits');
+    exitLayer.objects.forEach((exit) => {
+        const exitGeom = new THREE.BoxBufferGeometry(exit.width * INV_GAME_TILE_SIZE, 10, exit.height * INV_GAME_TILE_SIZE);
+        const exitMesh = new THREE.Mesh(exitGeom, exitLightMaterial);
+        exitMesh.position.set((exit.x + (exit.width * 0.5)) * INV_GAME_TILE_SIZE, 5, (exit.y + (exit.height * 0.5)) * INV_GAME_TILE_SIZE);
+        this.threeScene.add(exitMesh);
+    });
+
     // characters
     this.sceneMeshData.monsters = [];
     monsters.forEach((monster, i) => {
@@ -192,13 +206,15 @@ Gameplay.prototype.setupEvents = function () {
 
 };
 Gameplay.prototype.removeEvents = function () {
+    this.events.removeListener('update');
     this.events.removeListener('update', this.player.update, this.player);
+    this.events.removeListener('shutdown');
 
     this.monsters.forEach(function(monster) {
         this.events.removeListener('update', monster.update, monster);
     }, this);
 };
-Gameplay.prototype.create = function () {
+Gameplay.prototype.create = function (sceneData) {
     this.uiScene = this.scene.get('InGameUI');
     this.setupThreeBackground();
 
@@ -207,8 +223,9 @@ Gameplay.prototype.create = function () {
     this.player.visible = false;
     this.player.strike.visible = false;
 
-    this.map = this.add.tilemap('test_map');
+    this.map = this.add.tilemap(this.mapKey);
     this.map.addTilesetImage('tilesheet', 'test_sheet_image');
+    this.exitLayer = this.map.getObjectLayer('exits');
     this.foreground = this.map.createStaticLayer('foreground', 'tilesheet');
     this.foreground.setCollision([14]);
     this.foreground.visible = false;
@@ -237,6 +254,8 @@ Gameplay.prototype.create = function () {
     // UI setup
     this.setupEvents();
     this.initializeThreeScene(this.player, this.foreground.layer, this.monsters, this.map);
+
+    this.initialized = true;
 };
 Gameplay.prototype.dialogueDone = function () {
     this.player.currentState = PlayerStates.NORMAL;
@@ -273,12 +292,33 @@ Gameplay.prototype.playCharacterAnimation = function(character, animationName) {
     anim.play();
 };
 Gameplay.prototype.update = function () {
+    if (this.initialized !== true) {
+        return;
+    }
+
     this.mixers.forEach((mixer) => {
         // TODO: variable timestep this for lower framerates
         const sixtyFramesPerSecond = 0.016;
         mixer.update(sixtyFramesPerSecond);
     })
     this.updateThreeScene();
+
+    // Check if the player has entered an exit
+    for (let i = 0; i < this.exitLayer.objects.length; i++) {
+        const exit = this.exitLayer.objects[i];
+
+        // PERF: do less per-frame allocations by not using an array
+        const overlappingEntities = this.physics.overlapRect(exit.x, exit.y, exit.width, exit.height);
+
+        // TODO: Only check for the player
+        if (overlappingEntities.length > 0) {
+            //console.log(exit.name);
+            this.scene.start('Gameplay', {
+                map: exit.name
+            });
+            return;
+        }
+    }
 
     // Check for closest monster if able
     if (this.player.currentState === PlayerStates.NORMAL) {
@@ -305,6 +345,7 @@ Gameplay.prototype.update = function () {
     }
 };
 Gameplay.prototype.shutdown = function () {
+    this.removeEvents();
     this.player = null;
     this.strike = null;
     this.map = null;
@@ -317,6 +358,8 @@ Gameplay.prototype.shutdown = function () {
     }
     this.three = null;
     this.sceneMeshData = {};
-    this.actorTable = null;
+    this.actorTable = {};
     this.mixers = [];
+
+    this.initialized = false;
 };
