@@ -1,5 +1,7 @@
 -> top_knot
 
+LIST Inventory = paperclip, camera, valentine_card
+
 === convo_1 ===
 = opener
 Lately... #speaker=fyodor
@@ -44,15 +46,42 @@ Until I can voice my SNK free speech.
 -> DONE
 
 === convo_5 ===
-No one here. #speaker=curtis
-Just me!
-How are you today?
-... aight.
+= opener
+{ Inventory !? paperclip:
+    -> hasnt_taken_paperclip
+- else: 
+    -> has_paperclip_now
+}
+
+= hasnt_taken_paperclip
+Hey, do you want a paperclip? #speaker=curtis
+I have one I don't need.
+What do you say?
++ [Sure thing]
+    -> take_curtis_papercip
++ [I'm fine, thanks]
+    -> refuse_curtis_paperclip
+    
+= take_curtis_papercip
+    Yay!
+    Here you go.
+    << Got a paperclip! >>
+    ~ Inventory += paperclip
+    -> DONE
+    
+= refuse_curtis_paperclip
+    Oh, okay...
+    -> DONE
+    
+= has_paperclip_now
+    Hope you enjoy that paperclip.
+    It's a good one.
+    -> DONE
 -> DONE
 
 === top_knot ===
 Jella: Hello world!
 Michael: What now? 
-* [uhhh] -> convo_1
++ [uhhh] -> convo_5
 * [hmm] -> top_knot
 + [...] -> DONE
